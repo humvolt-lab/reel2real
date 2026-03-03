@@ -5,541 +5,765 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
 <title>RT-7600 Tape Sampler</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
 <style>
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
-  html,body{width:100%;height:100%;overflow:hidden;background:#080604;position:fixed;}
-  #root{width:100%;height:100%;display:flex;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
+html,body{width:100%;height:100%;overflow:hidden;background:#080604;position:fixed;top:0;left:0;}
+#app{
+  width:100vw;height:100dvh;
+  background:linear-gradient(175deg,#1e1408 0%,#140e06 40%,#0c0804 100%);
+  display:flex;flex-direction:column;overflow:hidden;
+  font-family:'VT323',monospace;
+  max-width:420px;margin:0 auto;
+  border-left:1.5px solid #3a2a10;border-right:1.5px solid #3a2a10;
+}
+.vt{font-family:'VT323',monospace;}
+.mono{font-family:'Share Tech Mono',monospace;}
+
+/* TOP BADGE */
+#badge{
+background:linear-gradient(90deg,#140e04,#1e1608,#140e04);
+border-bottom:1.5px solid #2e1e08;
+padding:6px 12px;display:flex;justify-content:space-between;align-items:center;
+flex-shrink:0;
+}
+#badge-title{color:#c8a060;font-size:15px;letter-spacing:4px;text-shadow:0 0 6px rgba(200,160,96,0.4);}
+#badge-pitch{color:#3a2810;font-size:11px;letter-spacing:1px;}
+#status-led{width:7px;height:7px;border-radius:50%;background:#181208;margin-right:7px;transition:all 0.3s;flex-shrink:0;}
+#status-led.on{background:#40ff80;box-shadow:0 0 6px #40ff80;}
+
+/* REELS ROW */
+#reels-row{display:flex;justify-content:space-between;align-items:center;padding:8px 10px 4px;flex-shrink:0;}
+.reel-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;}
+.reel-box{
+background:#060402;border:2px solid #221608;border-radius:5px;
+width:22vw;max-width:86px;height:22vw;max-height:86px;
+display:flex;align-items:center;justify-content:center;
+box-shadow:inset 0 0 12px rgba(0,0,0,0.9);
+}
+.reel-label{color:#261a08;font-size:9px;letter-spacing:2px;}
+
+/* CENTER */
+#center-info{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:0 8px;min-width:0;}
+#sample-display{background:#040302;border:1px solid #221608;border-radius:3px;padding:4px 7px;width:100%;}
+#sample-label{color:#221608;font-size:8px;letter-spacing:2px;margin-bottom:1px;}
+#sample-name{color:#2e1e08;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#sample-name.loaded{color:#c8a060;}
+#vu-row{display:flex;gap:6px;align-items:center;}
+#vu-meter{display:flex;gap:1.5px;align-items:flex-end;height:30px;}
+.vu-seg{border:1px solid #181808;transition:background 0.03s;}
+#load-count-wrap{text-align:right;}
+#load-label{color:#221608;font-size:8px;letter-spacing:1px;}
+#load-count{color:#c8a060;font-size:20px;letter-spacing:2px;line-height:1;}
+
+/* TAPE PATH */
+#tape-path{padding:0 10px 3px;flex-shrink:0;}
+
+/* BPM + BEATS */
+#bpm-beats{padding:0 10px 4px;display:flex;gap:5px;flex-shrink:0;}
+.panel-box{background:#040302;border:1px solid #1e1408;border-radius:3px;padding:4px 7px;}
+.panel-label{color:#221608;font-size:8px;letter-spacing:2px;margin-bottom:3px;}
+#bpm-box{flex:1;}
+#bpm-btns,#beat-btns{display:flex;gap:2px;}
+.sel-btn{
+background:#0c0a04;color:#2e2414;border:1px solid #221608;border-radius:3px;
+cursor:pointer;font-family:‘VT323’,monospace;
+display:flex;align-items:center;justify-content:center;
+transition:all 0.15s;-webkit-appearance:none;outline:none;
+}
+.sel-btn.active{background:#c8a06020;color:#c8a060;border-color:#c8a060;box-shadow:0 0 5px #c8a06044;}
+#bpm-btns .sel-btn{flex:1;height:20px;font-size:10px;}
+#beat-btns .sel-btn{width:26px;height:20px;font-size:10px;}
+
+/* TRANSPORT */
+#transport{padding:0 10px 4px;display:flex;gap:4px;justify-content:center;flex-shrink:0;}
+.t-btn{
+background:#0c0a04;border:1px solid #221608;border-radius:3px;
+cursor:pointer;font-family:‘VT323’,monospace;font-size:13px;
+display:flex;align-items:center;justify-content:center;
+height:34px;-webkit-appearance:none;outline:none;transition:all 0.15s;
+color:#2e2414;flex-shrink:0;
+}
+#btn-stop{width:40px;}
+#btn-stop.active{background:#ff403020;color:#ff4030;border-color:#ff4030;box-shadow:0 0 5px #ff403044;}
+#btn-play{width:40px;}
+#btn-play.active{background:#40ff8020;color:#40ff80;border-color:#40ff80;box-shadow:0 0 5px #40ff8044;}
+#btn-new{width:66px;background:#c8a06018;color:#c8a060;border-color:#c8a060;box-shadow:0 0 5px #c8a06044;}
+#btn-rev{width:40px;}
+#btn-rev.active{background:#40a0ff20;color:#40a0ff;border-color:#40a0ff;box-shadow:0 0 5px #40a0ff44;}
+#btn-pd{width:30px;color:#ff80c0;border-color:#331828;}
+#btn-pu{width:30px;color:#ff80c0;border-color:#331828;}
+
+/* DIVIDER */
+.divider{height:1px;background:linear-gradient(90deg,transparent,#2e1e0a,transparent);margin:0 10px 4px;flex-shrink:0;}
+
+/* KNOBS */
+#knobs-row{padding:0 4px 3px;flex-shrink:0;display:flex;justify-content:space-around;}
+.knob-wrap{display:flex;flex-direction:column;align-items:center;gap:1px;touch-action:none;user-select:none;}
+.knob-label{font-size:8px;color:#4a3a20;letter-spacing:1px;text-transform:uppercase;}
+
+/* GATE */
+#gate-panel{padding:0 10px 4px;flex-shrink:0;}
+#gate-inner{background:#040302;border:1px solid #1e1408;border-radius:3px;padding:5px 8px;}
+#gate-title{color:#221608;font-size:8px;letter-spacing:3px;margin-bottom:4px;}
+#gate-row{display:flex;gap:3px;align-items:center;justify-content:space-between;}
+#gate-btns{display:flex;gap:2px;flex-wrap:wrap;}
+.gate-btn{height:18px;font-size:8px;min-width:30px;padding:0 4px;}
+#gate-vis{display:flex;gap:1px;flex-shrink:0;}
+.gate-step{width:6px;height:13px;border:1px solid #1e1408;}
+
+/* STATUS */
+#status-bar{padding:0 10px 4px;flex-shrink:0;}
+#status-box{padding:4px 8px;background:#040302;border:1px solid #1e1408;border-radius:3px;color:#3a2a10;font-size:10px;letter-spacing:3px;text-align:center;}
+#status-box.error{background:#200808;border-color:#ff4030;color:#ff5040;}
+
+/* FILLER */
+#filler{flex:1;background:linear-gradient(180deg,#0c0804,#080604);position:relative;overflow:hidden;min-height:20px;}
+.screw{position:absolute;width:10px;height:10px;border-radius:50%;background:#1a1208;border:1px solid #2e1e08;box-shadow:inset 1px 1px 2px rgba(0,0,0,0.8);}
+#brand-plate{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);border:1px solid #1e1408;border-radius:2px;padding:2px 14px;white-space:nowrap;color:#1e1408;font-size:9px;letter-spacing:4px;}
+
+/* BOTTOM */
+#bottom-bar{
+background:linear-gradient(90deg,#0e0804,#160e06,#0e0804);
+border-top:1.5px solid #1e1408;padding:5px 12px;
+display:flex;justify-content:space-between;align-items:center;flex-shrink:0;
+}
+.bottom-txt{color:#181008;font-size:9px;letter-spacing:1px;}
 </style>
+
 </head>
 <body>
-<div id="root"></div>
-<script type="text/babel">
-const { useState, useEffect, useRef, useCallback } = React;
+<div id="app">
 
-// Direct Wikimedia URLs — these include CORS headers natively
-// We try direct first, then fall back to a proxy
+  <!-- TOP BADGE -->
+
+  <div id="badge">
+    <div style="display:flex;align-items:center;">
+      <div id="status-led"></div>
+      <span id="badge-title" class="vt">RT-7600 SAMPLER</span>
+    </div>
+    <span id="badge-pitch" class="vt">×1.00</span>
+  </div>
+
+  <!-- REELS -->
+
+  <div id="reels-row">
+    <div class="reel-wrap">
+      <div class="reel-box"><canvas id="reel-l" width="80" height="80" style="width:88%;height:88%;"></canvas></div>
+      <span class="reel-label vt">SUPPLY</span>
+    </div>
+    <div id="center-info">
+      <div id="sample-display">
+        <div id="sample-label" class="vt">SAMPLE</div>
+        <div id="sample-name" class="mono">NO TAPE</div>
+      </div>
+      <div id="vu-row">
+        <div id="vu-meter"></div>
+        <div id="load-count-wrap">
+          <div id="load-label" class="vt">LOADED</div>
+          <div id="load-count" class="vt">000</div>
+        </div>
+      </div>
+    </div>
+    <div class="reel-wrap">
+      <div class="reel-box"><canvas id="reel-r" width="80" height="80" style="width:88%;height:88%;"></canvas></div>
+      <span class="reel-label vt">TAKEUP</span>
+    </div>
+  </div>
+
+  <!-- TAPE PATH -->
+
+  <div id="tape-path">
+    <svg width="100%" height="16" viewBox="0 0 360 16" preserveAspectRatio="none">
+      <defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#c4956a"/><stop offset="50%" stop-color="#9a5a38"/><stop offset="100%" stop-color="#783a18"/></linearGradient></defs>
+      <rect x="55" y="4" width="8" height="8" rx="1" fill="#1e1408" stroke="#3a2410" stroke-width="1"/>
+      <rect x="297" y="4" width="8" height="8" rx="1" fill="#1e1408" stroke="#3a2410" stroke-width="1"/>
+      <rect x="148" y="1" width="64" height="14" rx="2" fill="#180e04" stroke="#c8a060" stroke-width="1.2"/>
+      <rect x="157" y="4" width="46" height="8" rx="1" fill="#0c0604" stroke="#2a1a08" stroke-width="0.8"/>
+      <line x1="172" y1="5" x2="172" y2="11" stroke="#c8a060" stroke-width="0.8"/>
+      <line x1="183" y1="5" x2="183" y2="11" stroke="#c8a060" stroke-width="0.8"/>
+      <rect x="63" y="6" width="85" height="4" fill="url(#tg)"/>
+      <rect x="212" y="6" width="85" height="4" fill="url(#tg)"/>
+    </svg>
+  </div>
+
+  <!-- BPM + BEATS -->
+
+  <div id="bpm-beats">
+    <div class="panel-box" id="bpm-box">
+      <div class="panel-label vt">BPM</div>
+      <div id="bpm-btns"></div>
+    </div>
+    <div class="panel-box">
+      <div class="panel-label vt">BEATS</div>
+      <div id="beat-btns"></div>
+    </div>
+  </div>
+
+  <!-- TRANSPORT -->
+
+  <div id="transport">
+    <button class="t-btn" id="btn-stop">■</button>
+    <button class="t-btn" id="btn-play">▶</button>
+    <button class="t-btn" id="btn-new">⏏ NEW</button>
+    <button class="t-btn" id="btn-rev">REV</button>
+    <button class="t-btn" id="btn-pd">▼P</button>
+    <button class="t-btn" id="btn-pu">▲P</button>
+  </div>
+
+  <!-- DIVIDER -->
+
+  <div class="divider"></div>
+
+  <!-- KNOBS -->
+
+  <div id="knobs-row">
+    <div class="knob-wrap" id="knob-filter"><canvas width="40" height="40"></canvas><span class="knob-label vt">FILTER</span></div>
+    <div class="knob-wrap" id="knob-reverb"><canvas width="40" height="40"></canvas><span class="knob-label vt">REVERB</span></div>
+    <div class="knob-wrap" id="knob-drive"><canvas width="40" height="40"></canvas><span class="knob-label vt">DRIVE</span></div>
+    <div class="knob-wrap" id="knob-flange"><canvas width="40" height="40"></canvas><span class="knob-label vt">FLANGE</span></div>
+    <div class="knob-wrap" id="knob-wobble"><canvas width="40" height="40"></canvas><span class="knob-label vt">WOBBLE</span></div>
+    <div class="knob-wrap" id="knob-vol"><canvas width="40" height="40"></canvas><span class="knob-label vt">VOL</span></div>
+  </div>
+
+  <!-- RHYTHM GATE -->
+
+  <div id="gate-panel">
+    <div id="gate-inner">
+      <div id="gate-title" class="vt">RHYTHM GATE</div>
+      <div id="gate-row">
+        <div id="gate-btns"></div>
+        <div id="gate-vis"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATUS -->
+
+  <div id="status-bar">
+    <div id="status-box" class="vt">PRESS ⏏ NEW TO LOAD</div>
+  </div>
+
+  <!-- FILLER -->
+
+  <div id="filler">
+    <div class="screw" style="top:8px;left:8px;"></div>
+    <div class="screw" style="top:8px;right:8px;"></div>
+    <div class="screw" style="bottom:8px;left:8px;"></div>
+    <div class="screw" style="bottom:8px;right:8px;"></div>
+    <div id="brand-plate" class="vt">ANTHROPIC AUDIO SYSTEMS</div>
+  </div>
+
+  <!-- BOTTOM -->
+
+  <div id="bottom-bar">
+    <span class="bottom-txt vt">WIKIMEDIA ENGINE v2.0</span>
+    <span class="bottom-txt vt">AAS RT-7600</span>
+  </div>
+
+</div>
+<script>
+// ── AUDIO POOL ────────────────────────────────────────────────────────────────
 const AUDIO_POOL = [
-“https://upload.wikimedia.org/wikipedia/commons/2/20/Accordion_chords.ogg”,
-“https://upload.wikimedia.org/wikipedia/commons/1/11/Glass_Harp_Scale.ogg”,
-“https://upload.wikimedia.org/wikipedia/commons/e/e1/Cello_open_strings.ogg”,
-“https://upload.wikimedia.org/wikipedia/commons/a/a4/Violin_vibrato.ogg”,
-“https://upload.wikimedia.org/wikipedia/commons/9/9c/Trumpet_instrument.ogg”,
-“https://upload.wikimedia.org/wikipedia/commons/b/bd/Harmonica_blues_in_E.ogg”,
-“https://upload.wikimedia.org/wikipedia/commons/d/d9/Flute_vibrato.ogg”,
-“https://upload.wikimedia.org/wikipedia/commons/8/8a/Snare_drum_roll.ogg”,
-“https://upload.wikimedia.org/wikipedia/commons/0/04/Bass_guitar_open_strings.ogg”,
-“https://upload.wikimedia.org/wikipedia/commons/7/72/Sitar_sample.ogg”,
-“https://upload.wikimedia.org/wikipedia/commons/a/ad/LightningThunder.ogg”,
-“https://upload.wikimedia.org/wikipedia/commons/b/b5/Rain_on_a_Tin_Roof.ogg”,
-“https://upload.wikimedia.org/wikipedia/commons/7/7b/Frog_Kauai_peplop.ogg”,
-“https://upload.wikimedia.org/wikipedia/commons/4/4d/Cat_meow.ogg”,
-“https://upload.wikimedia.org/wikipedia/commons/6/62/Wolf_howl.ogg”,
-“https://upload.wikimedia.org/wikipedia/commons/1/13/Crow_call.ogg”,
-“https://upload.wikimedia.org/wikipedia/commons/0/0f/Typewriter.ogg”,
-“https://upload.wikimedia.org/wikipedia/commons/a/a3/Clock_ticking.ogg”,
-“https://upload.wikimedia.org/wikipedia/commons/e/e9/Applause.ogg”,
-“https://upload.wikimedia.org/wikipedia/commons/b/b9/Crowd_cheering.ogg”,
-“https://upload.wikimedia.org/wikipedia/commons/3/32/Wind_leaves.ogg”,
-“https://upload.wikimedia.org/wikipedia/commons/c/c6/Steam_train_sound.ogg”,
-“https://upload.wikimedia.org/wikipedia/commons/6/6a/Cash_register.ogg”,
-“https://upload.wikimedia.org/wikipedia/commons/f/f8/Phone_ringing.ogg”,
-“https://upload.wikimedia.org/wikipedia/commons/1/1f/Dial_up_modem_noises.ogg”,
+  "https://upload.wikimedia.org/wikipedia/commons/2/20/Accordion_chords.ogg",
+  "https://upload.wikimedia.org/wikipedia/commons/1/11/Glass_Harp_Scale.ogg",
+  "https://upload.wikimedia.org/wikipedia/commons/e/e1/Cello_open_strings.ogg",
+  "https://upload.wikimedia.org/wikipedia/commons/a/a4/Violin_vibrato.ogg",
+  "https://upload.wikimedia.org/wikipedia/commons/9/9c/Trumpet_instrument.ogg",
+  "https://upload.wikimedia.org/wikipedia/commons/b/bd/Harmonica_blues_in_E.ogg",
+  "https://upload.wikimedia.org/wikipedia/commons/d/d9/Flute_vibrato.ogg",
+  "https://upload.wikimedia.org/wikipedia/commons/8/8a/Snare_drum_roll.ogg",
+  "https://upload.wikimedia.org/wikipedia/commons/0/04/Bass_guitar_open_strings.ogg",
+  "https://upload.wikimedia.org/wikipedia/commons/7/72/Sitar_sample.ogg",
+  "https://upload.wikimedia.org/wikipedia/commons/a/ad/LightningThunder.ogg",
+  "https://upload.wikimedia.org/wikipedia/commons/b/b5/Rain_on_a_Tin_Roof.ogg",
+  "https://upload.wikimedia.org/wikipedia/commons/7/7b/Frog_Kauai_peplop.ogg",
+  "https://upload.wikimedia.org/wikipedia/commons/4/4d/Cat_meow.ogg",
+  "https://upload.wikimedia.org/wikipedia/commons/6/62/Wolf_howl.ogg",
+  "https://upload.wikimedia.org/wikipedia/commons/1/13/Crow_call.ogg",
+  "https://upload.wikimedia.org/wikipedia/commons/0/0f/Typewriter.ogg",
+  "https://upload.wikimedia.org/wikipedia/commons/a/a3/Clock_ticking.ogg",
+  "https://upload.wikimedia.org/wikipedia/commons/e/e9/Applause.ogg",
+  "https://upload.wikimedia.org/wikipedia/commons/b/b9/Crowd_cheering.ogg",
+  "https://upload.wikimedia.org/wikipedia/commons/3/32/Wind_leaves.ogg",
+  "https://upload.wikimedia.org/wikipedia/commons/c/c6/Steam_train_sound.ogg",
+  "https://upload.wikimedia.org/wikipedia/commons/6/6a/Cash_register.ogg",
+  "https://upload.wikimedia.org/wikipedia/commons/f/f8/Phone_ringing.ogg",
+  "https://upload.wikimedia.org/wikipedia/commons/1/1f/Dial_up_modem_noises.ogg",
 ];
 
+const BPM_OPTIONS   = [60, 90, 110, 120, 130, 140];
+const BEAT_OPTIONS  = [1, 2, 4, 8];
+const GATE_PATTERNS = [
+{ name:“OFF”,  p:[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1] },
+{ name:“4/4”,  p:[1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0] },
+{ name:“SKIP”, p:[1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1] },
+{ name:“STUT”, p:[1,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0] },
+{ name:“ROLL”, p:[1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0] },
+{ name:“SPRS”, p:[1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0] },
+{ name:“CHOS”, p:[1,0,1,1,0,1,0,0,1,0,1,0,0,1,0,1] },
+];
+const KNOB_DEFS = [
+{ id:“knob-filter”, label:“FILTER”, min:80,  max:18000, val:8000, log:true,  color:”#c8a060” },
+{ id:“knob-reverb”, label:“REVERB”, min:0,   max:1,     val:0,    log:false, color:”#a060ff” },
+{ id:“knob-drive”,  label:“DRIVE”,  min:0,   max:1,     val:0,    log:false, color:”#ff6030” },
+{ id:“knob-flange”, label:“FLANGE”, min:0,   max:1,     val:0,    log:false, color:”#40c8ff” },
+{ id:“knob-wobble”, label:“WOBBLE”, min:0,   max:1,     val:0,    log:false, color:”#ffaa20” },
+{ id:“knob-vol”,    label:“VOL”,    min:0,   max:1,     val:0.8,  log:false, color:”#40ff80” },
+];
 const PROXY = “https://corsproxy.io/?”;
 
-const BPM_OPTIONS = [60, 90, 110, 120, 130, 140];
-const BEAT_DIVISIONS = [1, 2, 4, 8];
-const GATE_PATTERNS = [
-{ name:“OFF”,  pattern:[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1] },
-{ name:“4/4”,  pattern:[1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0] },
-{ name:“SKIP”, pattern:[1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1] },
-{ name:“STUT”, pattern:[1,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0] },
-{ name:“ROLL”, pattern:[1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0] },
-{ name:“SPRS”, pattern:[1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0] },
-{ name:“CHOS”, pattern:[1,0,1,1,0,1,0,0,1,0,1,0,0,1,0,1] },
-];
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let ctx = null, buffer = null, source = null;
+let gainNode, filterNode, gateGain, distNode, reverbNode, dryGain, wetGain, flangerDelay, flangerGain, analyser;
+let gateTimer = null, vuRaf = null, reelRaf = null;
+let isPlaying = false, isLoading = false;
+let bpm = 120, beats = 2, reversed = false, gateIdx = 0, pitch = 1.0;
+let loadedCount = 0, reelAngle = 0;
+let knobVals = {};
+KNOB_DEFS.forEach(k => knobVals[k.id] = k.val);
 
-function makeDistortionCurve(amount) {
-const k=amount*400,n=256,curve=new Float32Array(n);
-for(let i=0;i<n;i++){const x=(i*2)/n-1;curve[i]=k?((Math.PI+k)*x)/(Math.PI+k*Math.abs(x)):x;}
+// ── VU METER SETUP ────────────────────────────────────────────────────────────
+const vuEl = document.getElementById(‘vu-meter’);
+const VU_SEGS = 12;
+for (let i = 0; i < VU_SEGS; i++) {
+const d = document.createElement(‘div’);
+d.className = ‘vu-seg’;
+d.style.width = ‘4px’;
+d.style.height = (3 + i * 2) + ‘px’;
+d.style.background = ‘#101008’;
+vuEl.appendChild(d);
+}
+const vuSegs = Array.from(vuEl.children);
+
+function updateVU(level) {
+vuSegs.forEach((s, i) => {
+const active = level > i / VU_SEGS;
+const color = i > 9 ? ‘#ff3020’ : i > 7 ? ‘#ffaa00’ : ‘#40ff80’;
+s.style.background = active ? color : ‘#101008’;
+s.style.borderColor = active ? color : ‘#181808’;
+s.style.boxShadow = active ? `0 0 3px ${color}` : ‘none’;
+});
+}
+
+// ── REEL CANVAS ───────────────────────────────────────────────────────────────
+function drawReel(canvas, angle) {
+const w = canvas.width, h = canvas.height, cx = w/2, cy = h/2, r = w*0.46;
+const c = canvas.getContext(‘2d’);
+c.clearRect(0, 0, w, h);
+
+// Outer rim gradient
+const g = c.createRadialGradient(cx, cy, 0, cx, cy, r);
+g.addColorStop(0, ‘#4a3728’); g.addColorStop(0.7, ‘#2a1f18’); g.addColorStop(1, ‘#1a1008’);
+c.beginPath(); c.arc(cx, cy, r, 0, Math.PI*2);
+c.fillStyle = g; c.fill();
+c.strokeStyle = ‘#8a6a40’; c.lineWidth = 2; c.stroke();
+
+// Tape rings
+[0.88, 0.78, 0.68].forEach((f, i) => {
+c.beginPath(); c.arc(cx, cy, r*f, 0, Math.PI*2);
+c.strokeStyle = ‘#c4956a’; c.lineWidth = 0.8; c.globalAlpha = 0.28 - i*0.07; c.stroke();
+});
+c.globalAlpha = 1;
+
+// Spokes
+c.save(); c.translate(cx, cy); c.rotate(angle);
+for (let i = 0; i < 6; i++) {
+const a = (i/6)*Math.PI*2;
+c.beginPath();
+c.moveTo(Math.cos(a)*r*0.32, Math.sin(a)*r*0.32);
+c.lineTo(Math.cos(a)*r*0.88, Math.sin(a)*r*0.88);
+c.strokeStyle = ‘#7a5a30’; c.lineWidth = 2.5; c.stroke();
+}
+
+// Hub
+const hg = c.createRadialGradient(0, 0, 0, 0, 0, r*0.32);
+hg.addColorStop(0, ‘#c8a060’); hg.addColorStop(1, ‘#7a5a30’);
+c.beginPath(); c.arc(0, 0, r*0.32, 0, Math.PI*2);
+c.fillStyle = hg; c.fill();
+c.strokeStyle = ‘#c8a060’; c.lineWidth = 1.5; c.stroke();
+
+// Center hole
+c.beginPath(); c.arc(0, 0, r*0.13, 0, Math.PI*2);
+c.fillStyle = ‘#1a1008’; c.fill();
+c.strokeStyle = ‘#7a5a30’; c.lineWidth = 1; c.stroke();
+
+// Bolt holes
+for (let i = 0; i < 3; i++) {
+const a = (i/3)*Math.PI*2;
+c.beginPath(); c.arc(Math.cos(a)*r*0.22, Math.sin(a)*r*0.22, r*0.04, 0, Math.PI*2);
+c.fillStyle = ‘#1a1008’; c.fill();
+}
+c.restore();
+}
+
+const reelL = document.getElementById(‘reel-l’);
+const reelR = document.getElementById(‘reel-r’);
+drawReel(reelL, 0); drawReel(reelR, 0);
+
+function animateReels() {
+reelAngle += (pitch * bpm / 120) * 0.025;
+drawReel(reelL, reelAngle);
+drawReel(reelR, -reelAngle * 0.7);
+reelRaf = requestAnimationFrame(animateReels);
+}
+
+// ── KNOB CANVAS ───────────────────────────────────────────────────────────────
+function polarToCart(cx, cy, r, deg) {
+const a = (deg - 90) * Math.PI / 180;
+return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+}
+
+function drawKnob(canvas, norm, color) {
+const s = canvas.width, cx = s/2, cy = s/2;
+const R = s*0.38, Ri = s*0.30;
+const angle = -140 + norm * 280;
+const c = canvas.getContext(‘2d’);
+c.clearRect(0, 0, s, s);
+
+// Body
+c.beginPath(); c.arc(cx, cy, s*0.46, 0, Math.PI*2);
+c.fillStyle = ‘#0e0c06’; c.fill();
+c.strokeStyle = ‘#2a1e0e’; c.lineWidth = 1.5; c.stroke();
+
+c.beginPath(); c.arc(cx, cy, Ri, 0, Math.PI*2);
+c.fillStyle = ‘#1e1808’; c.fill();
+
+// Track
+function arc(from, to, clr, lw) {
+const f = (from - 90)*Math.PI/180, t = (to - 90)*Math.PI/180;
+c.beginPath(); c.arc(cx, cy, R, f, t);
+c.strokeStyle = clr; c.lineWidth = lw; c.lineCap = ‘round’; c.stroke();
+}
+arc(-140, 140, ‘#1a1408’, 2.5);
+arc(-140, angle, color, 2.5);
+
+// Pointer
+const [px, py] = polarToCart(cx, cy, Ri - 2, angle);
+c.beginPath(); c.moveTo(cx, cy); c.lineTo(px, py);
+c.strokeStyle = color; c.lineWidth = 2; c.lineCap = ‘round’; c.stroke();
+
+// Center dot
+c.beginPath(); c.arc(cx, cy, s*0.09, 0, Math.PI*2);
+c.fillStyle = ‘#0e0c06’; c.fill();
+c.strokeStyle = color; c.lineWidth = 1; c.stroke();
+}
+
+function getNorm(def, val) {
+if (def.log) return Math.log(val / def.min) / Math.log(def.max / def.min);
+return (val - def.min) / (def.max - def.min);
+}
+
+KNOB_DEFS.forEach(def => {
+const wrap = document.getElementById(def.id);
+const canvas = wrap.querySelector(‘canvas’);
+canvas.width = 40; canvas.height = 40;
+drawKnob(canvas, getNorm(def, def.val), def.color);
+
+let startY, startVal;
+function onStart(e) {
+e.preventDefault();
+startY = e.touches ? e.touches[0].clientY : e.clientY;
+startVal = knobVals[def.id];
+window.addEventListener(‘mousemove’, onMove);
+window.addEventListener(‘mouseup’, onEnd);
+window.addEventListener(‘touchmove’, onMove, {passive: false});
+window.addEventListener(‘touchend’, onEnd);
+}
+function onMove(e) {
+e.preventDefault();
+const y = e.touches ? e.touches[0].clientY : e.clientY;
+const delta = (startY - y) / 120;
+let newVal;
+if (def.log) {
+const nn = Math.max(0, Math.min(1, getNorm(def, startVal) + delta));
+newVal = def.min * Math.pow(def.max / def.min, nn);
+} else {
+newVal = Math.max(def.min, Math.min(def.max, startVal + delta * (def.max - def.min)));
+}
+knobVals[def.id] = newVal;
+drawKnob(canvas, getNorm(def, newVal), def.color);
+applyKnob(def.id, newVal);
+}
+function onEnd() {
+window.removeEventListener(‘mousemove’, onMove);
+window.removeEventListener(‘mouseup’, onEnd);
+window.removeEventListener(‘touchmove’, onMove);
+window.removeEventListener(‘touchend’, onEnd);
+}
+canvas.addEventListener(‘mousedown’, onStart);
+canvas.addEventListener(‘touchstart’, onStart, {passive: false});
+});
+
+function applyKnob(id, val) {
+if (!ctx) return;
+if (id === ‘knob-filter’ && filterNode) filterNode.frequency.value = val;
+if (id === ‘knob-reverb’) { if(wetGain) wetGain.gain.value = val; if(dryGain) dryGain.gain.value = 1 - val * 0.5; }
+if (id === ‘knob-drive’ && distNode) distNode.curve = makeDistCurve(val);
+if (id === ‘knob-flange’ && flangerGain) flangerGain.gain.value = val * 0.7;
+if (id === ‘knob-vol’ && gainNode) gainNode.gain.value = val;
+if (id === ‘knob-wobble’ && source && source._wl) source._wl._wg.gain.value = val * 0.03;
+}
+
+// ── DISTORTION ────────────────────────────────────────────────────────────────
+function makeDistCurve(amount) {
+const k = amount * 400, n = 256, curve = new Float32Array(n);
+for (let i = 0; i < n; i++) {
+const x = (i * 2) / n - 1;
+curve[i] = k ? ((Math.PI + k) * x) / (Math.PI + k * Math.abs(x)) : x;
+}
 return curve;
 }
-async function createReverbIR(ctx) {
-const len=ctx.sampleRate*2,buf=ctx.createBuffer(2,len,ctx.sampleRate);
-for(let c=0;c<2;c++){const d=buf.getChannelData(c);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2);}
+
+// ── REVERB IR ─────────────────────────────────────────────────────────────────
+function createReverbIR(actx) {
+const len = actx.sampleRate * 2, buf = actx.createBuffer(2, len, actx.sampleRate);
+for (let c = 0; c < 2; c++) {
+const d = buf.getChannelData(c);
+for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2);
+}
 return buf;
 }
-function polarToCart(cx,cy,r,angle){const a=(angle-90)*Math.PI/180;return{x:cx+r*Math.cos(a),y:cy+r*Math.sin(a)};}
-function describeArc(cx,cy,r,s,e){const sp=polarToCart(cx,cy,r,s),ep=polarToCart(cx,cy,r,e);return `M ${sp.x} ${sp.y} A ${r} ${r} 0 ${e-s<=180?0:1} 1 ${ep.x} ${ep.y}`;}
 
-// Try direct fetch first, fall back to CORS proxy
+// ── AUDIO INIT ────────────────────────────────────────────────────────────────
+function initAudio() {
+if (ctx) return;
+ctx = new (window.AudioContext || window.webkitAudioContext)();
+gainNode    = ctx.createGain();          gainNode.gain.value = knobVals[‘knob-vol’];
+filterNode  = ctx.createBiquadFilter();  filterNode.type = ‘lowpass’; filterNode.frequency.value = knobVals[‘knob-filter’];
+gateGain    = ctx.createGain();          gateGain.gain.value = 1;
+distNode    = ctx.createWaveShaper();    distNode.curve = makeDistCurve(0); distNode.oversample = ‘4x’;
+analyser    = ctx.createAnalyser();      analyser.fftSize = 256;
+reverbNode  = ctx.createConvolver();     reverbNode.buffer = createReverbIR(ctx);
+dryGain     = ctx.createGain();          dryGain.gain.value = 1;
+wetGain     = ctx.createGain();          wetGain.gain.value = 0;
+flangerDelay = ctx.createDelay(0.05);    flangerDelay.delayTime.value = 0.005;
+flangerGain  = ctx.createGain();         flangerGain.gain.value = 0;
+const fl    = ctx.createOscillator();
+const flg   = ctx.createGain();          flg.gain.value = 0.002;
+fl.frequency.value = 0.5;
+fl.connect(flg); flg.connect(flangerDelay.delayTime); fl.start();
+
+gateGain.connect(distNode);
+distNode.connect(filterNode);
+filterNode.connect(dryGain);
+filterNode.connect(reverbNode); reverbNode.connect(wetGain);
+filterNode.connect(flangerDelay); flangerDelay.connect(flangerGain);
+dryGain.connect(gainNode); wetGain.connect(gainNode); flangerGain.connect(gainNode);
+gainNode.connect(analyser); analyser.connect(ctx.destination);
+}
+
+// ── SLICE BUFFER ──────────────────────────────────────────────────────────────
+function sliceBuffer(buf) {
+const loopLen = Math.min((60 / bpm) * beats, buf.duration);
+const startSec = Math.max(0, (buf.duration - loopLen) * 0.3);
+const frames = Math.floor(loopLen * ctx.sampleRate);
+const sf = Math.floor(startSec * ctx.sampleRate);
+const sliced = ctx.createBuffer(buf.numberOfChannels, frames, ctx.sampleRate);
+for (let ch = 0; ch < buf.numberOfChannels; ch++) {
+const src = buf.getChannelData(ch), dst = sliced.getChannelData(ch);
+for (let i = 0; i < frames; i++) dst[i] = src[sf + i] || 0;
+if (reversed) dst.reverse();
+}
+return sliced;
+}
+
+// ── PLAYBACK ──────────────────────────────────────────────────────────────────
+function stopSource() {
+if (source) { try { source.stop(); } catch(e){} try { if(source._wl) source._wl.stop(); } catch(e){} source = null; }
+clearInterval(gateTimer); gateTimer = null;
+cancelAnimationFrame(vuRaf); cancelAnimationFrame(reelRaf);
+updateVU(0);
+}
+
+function stopAll() {
+stopSource();
+isPlaying = false;
+document.getElementById(‘status-led’).classList.remove(‘on’);
+document.getElementById(‘btn-play’).classList.remove(‘active’);
+document.getElementById(‘btn-stop’).classList.add(‘active’);
+setStatus(‘STOPPED’);
+}
+
+function startGate() {
+clearInterval(gateTimer);
+if (gateIdx === 0) { gateGain.gain.value = 1; return; }
+const pat = GATE_PATTERNS[gateIdx].p; let step = 0;
+gateTimer = setInterval(() => {
+gateGain.gain.setTargetAtTime(pat[step % 16], ctx.currentTime, 0.003);
+step++;
+}, (60000 / bpm) / 4);
+}
+
+function startVU() {
+const data = new Uint8Array(analyser.frequencyBinCount);
+function tick() { analyser.getByteFrequencyData(data); updateVU(data.reduce((a,b)=>a+b,0)/data.length/255); vuRaf = requestAnimationFrame(tick); }
+vuRaf = requestAnimationFrame(tick);
+}
+
+function play(buf) {
+if (!ctx || !buf) return;
+stopSource();
+const sliced = sliceBuffer(buf);
+source = ctx.createBufferSource();
+source.buffer = sliced; source.loop = true; source.playbackRate.value = pitch;
+source.connect(gateGain); source.start();
+const wobble = knobVals[‘knob-wobble’];
+if (wobble > 0) {
+const wl = ctx.createOscillator(); wl.frequency.value = 3.5;
+const wg = ctx.createGain(); wg.gain.value = wobble * 0.03;
+wl.connect(wg); wg.connect(source.playbackRate); wl.start();
+source._wl = wl; wl._wg = wg;
+}
+isPlaying = true;
+document.getElementById(‘status-led’).classList.add(‘on’);
+document.getElementById(‘btn-play’).classList.add(‘active’);
+document.getElementById(‘btn-stop’).classList.remove(‘active’);
+startGate(); startVU(); animateReels();
+setStatus(‘PLAYING’);
+}
+
+// ── FETCH + LOAD ──────────────────────────────────────────────────────────────
 async function fetchAudio(url) {
 try {
 const r = await fetch(url, {mode:‘cors’});
-if (!r.ok) throw new Error(‘direct failed’);
+if (!r.ok) throw new Error();
 return await r.arrayBuffer();
 } catch(e) {
 const r = await fetch(PROXY + encodeURIComponent(url));
-if (!r.ok) throw new Error(‘proxy failed’);
+if (!r.ok) throw new Error();
 return await r.arrayBuffer();
 }
 }
 
-function ReelSVG({angle, size=84}){
-const a = angle * 180 / Math.PI;
-return (
-<svg width={size} height={size} viewBox="0 0 100 100">
-<defs>
-<radialGradient id="rg" cx="50%" cy="50%" r="50%">
-<stop offset="0%" stopColor="#4a3728"/>
-<stop offset="70%" stopColor="#2a1f18"/>
-<stop offset="100%" stopColor="#1a1008"/>
-</radialGradient>
-<radialGradient id="hg" cx="50%" cy="50%" r="50%">
-<stop offset="0%" stopColor="#c8a060"/>
-<stop offset="100%" stopColor="#7a5a30"/>
-</radialGradient>
-</defs>
-<g transform={`rotate(${a},50,50)`}>
-<circle cx="50" cy="50" r="47" fill="url(#rg)" stroke="#8a6a40" strokeWidth="2.5"/>
-{[42,37,32].map((r,i)=><circle key={i} cx="50" cy="50" r={r} fill="none" stroke="#c4956a" strokeWidth="0.8" opacity={0.28-i*0.07}/>)}
-{Array.from({length:6}).map((*,i)=>{
-const ang=(i/6)*Math.PI*2;
-return <line key={i} x1={50+Math.cos(ang)*15} y1={50+Math.sin(ang)*15} x2={50+Math.cos(ang)*42} y2={50+Math.sin(ang)*42} stroke="#7a5a30" strokeWidth="2.5"/>;
-})}
-<circle cx="50" cy="50" r="15" fill="url(#hg)" stroke="#c8a060" strokeWidth="1.5"/>
-<circle cx="50" cy="50" r="6" fill="#1a1008" stroke="#7a5a30" strokeWidth="1"/>
-{Array.from({length:3}).map((*,i)=>{
-const ang=(i/3)*Math.PI*2;
-return <circle key={i} cx={50+Math.cos(ang)*10} cy={50+Math.sin(ang)*10} r="2" fill="#1a1008"/>;
-})}
-</g>
-</svg>
-);
+async function loadNew() {
+if (isLoading) return;
+initAudio();
+if (ctx.state === ‘suspended’) await ctx.resume();
+isLoading = true;
+stopAll();
+const url = AUDIO_POOL[Math.floor(Math.random() * AUDIO_POOL.length)];
+const name = decodeURIComponent(url.split(’/’).pop()).replace(/_/g,’ ‘).replace(’.ogg’,’’).substring(0,22);
+document.getElementById(‘sample-name’).textContent = ‘LOADING…’;
+document.getElementById(‘sample-name’).classList.remove(‘loaded’);
+setStatus(‘LOADING…’); clearError();
+try {
+const ab = await fetchAudio(url);
+buffer = await ctx.decodeAudioData(ab);
+loadedCount++;
+document.getElementById(‘load-count’).textContent = String(loadedCount).padStart(3,‘0’);
+document.getElementById(‘sample-name’).textContent = name;
+document.getElementById(‘sample-name’).classList.add(‘loaded’);
+isLoading = false;
+play(buffer);
+} catch(e) {
+isLoading = false;
+document.getElementById(‘sample-name’).textContent = ‘LOAD FAILED’;
+setError(‘LOAD FAILED — TAP RETRY’);
+}
 }
 
-function Knob({label,value,min,max,onChange,color=”#c8a060”,log=false,size=40}){
-const norm=log?Math.log(value/min)/Math.log(max/min):(value-min)/(max-min);
-const angle=-140+norm*280;
-const cx=size/2,cy=size/2,r=size*0.38,ri=size*0.3;
-const handleDrag=(e)=>{
-e.preventDefault();
-const startY=e.touches?e.touches[0].clientY:e.clientY;
-const startVal=value;
-const onMove=(me)=>{
-const y2=me.touches?me.touches[0].clientY:me.clientY;
-const delta=(startY-y2)/120;
-if(log){const nn=Math.max(0,Math.min(1,(Math.log(startVal/min)/Math.log(max/min))+delta));onChange(min*Math.pow(max/min,nn));}
-else onChange(Math.max(min,Math.min(max,startVal+delta*(max-min))));
+// ── STATUS HELPERS ────────────────────────────────────────────────────────────
+function setStatus(msg) {
+const el = document.getElementById(‘status-box’);
+el.textContent = msg; el.classList.remove(‘error’);
+}
+function setError(msg) {
+const el = document.getElementById(‘status-box’);
+el.innerHTML = msg + ’ — <span style="text-decoration:underline;cursor:pointer" onclick="loadNew()">RETRY</span>’;
+el.classList.add(‘error’);
+}
+function clearError() {
+document.getElementById(‘status-box’).classList.remove(‘error’);
+}
+
+// ── BPM BUTTONS ───────────────────────────────────────────────────────────────
+const bpmContainer = document.getElementById(‘bpm-btns’);
+BPM_OPTIONS.forEach(b => {
+const btn = document.createElement(‘button’);
+btn.className = ‘sel-btn’ + (b === bpm ? ’ active’ : ‘’);
+btn.textContent = b;
+btn.onclick = () => {
+bpm = b;
+bpmContainer.querySelectorAll(’.sel-btn’).forEach(x => x.classList.remove(‘active’));
+btn.classList.add(‘active’);
+if (isPlaying && buffer) play(buffer);
+if (isPlaying) startGate();
 };
-const onUp=()=>{
-window.removeEventListener(“mousemove”,onMove);window.removeEventListener(“mouseup”,onUp);
-window.removeEventListener(“touchmove”,onMove);window.removeEventListener(“touchend”,onUp);
-};
-window.addEventListener(“mousemove”,onMove);window.addEventListener(“mouseup”,onUp);
-window.addEventListener(“touchmove”,onMove,{passive:false});window.addEventListener(“touchend”,onUp);
-};
-return (
-<div style={{display:“flex”,flexDirection:“column”,alignItems:“center”,gap:1,touchAction:“none”}}>
-<div onMouseDown={handleDrag} onTouchStart={handleDrag} style={{cursor:“ns-resize”,userSelect:“none”}}>
-<svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-<circle cx={cx} cy={cy} r={size*0.46} fill="#0e0c06" stroke="#2a1e0e" strokeWidth="1.5"/>
-<circle cx={cx} cy={cy} r={ri} fill="#1e1808"/>
-<path d={describeArc(cx,cy,r,-140,140)} fill="none" stroke="#1a1408" strokeWidth="2.5" strokeLinecap="round"/>
-<path d={describeArc(cx,cy,r,-140,angle)} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round"/>
-<line x1={cx} y1={cy} x2={cx+Math.cos((angle-90)*Math.PI/180)*(ri-2)} y2={cy+Math.sin((angle-90)*Math.PI/180)*(ri-2)} stroke={color} strokeWidth="2" strokeLinecap="round"/>
-<circle cx={cx} cy={cy} r={size*0.09} fill="#0e0c06" stroke={color} strokeWidth="1"/>
-</svg>
-</div>
-<span style={{fontFamily:”‘VT323’,monospace”,fontSize:8,color:”#4a3a20”,letterSpacing:1,textTransform:“uppercase”}}>{label}</span>
-</div>
-);
-}
-
-function VUMeter({level}){
-const segs=12;
-return (
-<div style={{display:“flex”,gap:1.5,alignItems:“flex-end”,height:30}}>
-{Array.from({length:segs}).map((_,i)=>{
-const active=level>i/segs;
-const color=i>9?”#ff3020”:i>7?”#ffaa00”:”#40ff80”;
-return <div key={i} style={{width:4,height:3+i*2,background:active?color:”#101008”,border:`1px solid ${active?color:"#181808"}`,boxShadow:active?`0 0 3px ${color}`:“none”,transition:“background 0.03s”}}/>;
-})}
-</div>
-);
-}
-
-function App(){
-const audioCtxRef=useRef(null);
-const bufferRef=useRef(null);
-const sourceRef=useRef(null);
-const gainRef=useRef(null);
-const filterRef=useRef(null);
-const gateGainRef=useRef(null);
-const reverbRef=useRef(null);
-const distortionRef=useRef(null);
-const flangerRef=useRef(null);
-const analyserRef=useRef(null);
-const gateIntervalRef=useRef(null);
-const animFrameRef=useRef(null);
-const reelAnimRef=useRef(null);
-
-const [isPlaying,setIsPlaying]=useState(false);
-const [isLoading,setIsLoading]=useState(false);
-const [error,setError]=useState(null);
-const [currentUrl,setCurrentUrl]=useState(null);
-const [bpm,setBpm]=useState(120);
-const [beats,setBeats]=useState(2);
-const [reverse,setReverse]=useState(false);
-const [gateIdx,setGateIdx]=useState(0);
-const [filterFreq,setFilterFreq]=useState(8000);
-const [reverbAmount,setReverbAmount]=useState(0);
-const [distAmount,setDistAmount]=useState(0);
-const [flangerAmount,setFlangerAmount]=useState(0);
-const [pitch,setPitch]=useState(1.0);
-const [volume,setVolume]=useState(0.8);
-const [tapeWobble,setTapeWobble]=useState(0);
-const [vuLevel,setVuLevel]=useState(0);
-const [reelAngle,setReelAngle]=useState(0);
-const [loadedCount,setLoadedCount]=useState(0);
-const [status,setStatus]=useState(“PRESS ⏏ NEW”);
-
-const initAudio=useCallback(()=>{
-if(audioCtxRef.current)return;
-const ctx=new(window.AudioContext||window.webkitAudioContext)();
-audioCtxRef.current=ctx;
-gainRef.current=ctx.createGain();gainRef.current.gain.value=0.8;
-filterRef.current=ctx.createBiquadFilter();filterRef.current.type=“lowpass”;filterRef.current.frequency.value=8000;
-gateGainRef.current=ctx.createGain();gateGainRef.current.gain.value=1;
-distortionRef.current=ctx.createWaveShaper();distortionRef.current.curve=makeDistortionCurve(0);distortionRef.current.oversample=“4x”;
-analyserRef.current=ctx.createAnalyser();analyserRef.current.fftSize=256;
-reverbRef.current=ctx.createConvolver();
-const dry=ctx.createGain();dry.gain.value=1;
-const wet=ctx.createGain();wet.gain.value=0;
-reverbRef.current._dry=dry;reverbRef.current._wet=wet;
-createReverbIR(ctx).then(b=>{reverbRef.current.buffer=b;});
-const fd=ctx.createDelay(0.05);fd.delayTime.value=0.005;
-const fg=ctx.createGain();fg.gain.value=0;
-const fl=ctx.createOscillator();fl.frequency.value=0.5;
-const flg=ctx.createGain();flg.gain.value=0.002;
-fl.connect(flg);flg.connect(fd.delayTime);fl.start();
-flangerRef.current={delay:fd,gain:fg};
-gateGainRef.current.connect(distortionRef.current);
-distortionRef.current.connect(filterRef.current);
-filterRef.current.connect(dry);filterRef.current.connect(reverbRef.current);reverbRef.current.connect(wet);
-filterRef.current.connect(fd);fd.connect(fg);
-dry.connect(gainRef.current);wet.connect(gainRef.current);fg.connect(gainRef.current);
-gainRef.current.connect(analyserRef.current);analyserRef.current.connect(ctx.destination);
-},[]);
-
-const getSlicedBuffer=useCallback((buffer)=>{
-const ctx=audioCtxRef.current;
-const loopLen=Math.min((60/bpm)*beats,buffer.duration);
-const startSec=Math.max(0,(buffer.duration-loopLen)*0.3);
-const frames=Math.floor(loopLen*ctx.sampleRate);
-const sf=Math.floor(startSec*ctx.sampleRate);
-const sliced=ctx.createBuffer(buffer.numberOfChannels,frames,ctx.sampleRate);
-for(let c=0;c<buffer.numberOfChannels;c++){
-const src=buffer.getChannelData(c),dst=sliced.getChannelData(c);
-for(let i=0;i<frames;i++)dst[i]=src[sf+i]||0;
-if(reverse)dst.reverse();
-}
-return sliced;
-},[bpm,beats,reverse]);
-
-const stopSourceOnly=()=>{
-if(sourceRef.current){
-try{sourceRef.current.stop();}catch(e){}
-try{if(sourceRef.current._wl)sourceRef.current._wl.stop();}catch(e){}
-sourceRef.current=null;
-}
-clearInterval(gateIntervalRef.current);
-cancelAnimationFrame(animFrameRef.current);
-cancelAnimationFrame(reelAnimRef.current);
-};
-
-const stopPlayback=useCallback(()=>{stopSourceOnly();setIsPlaying(false);setVuLevel(0);},[]);
-
-const startGate=useCallback(()=>{
-clearInterval(gateIntervalRef.current);
-if(gateIdx===0){if(gateGainRef.current)gateGainRef.current.gain.value=1;return;}
-const pat=GATE_PATTERNS[gateIdx].pattern;let step=0;
-gateIntervalRef.current=setInterval(()=>{
-if(gateGainRef.current)gateGainRef.current.gain.setTargetAtTime(pat[step%16],audioCtxRef.current.currentTime,0.003);
-step++;
-},(60000/bpm)/4);
-},[gateIdx,bpm]);
-
-const startVU=()=>{
-const data=new Uint8Array(analyserRef.current.frequencyBinCount);
-const tick=()=>{
-analyserRef.current.getByteFrequencyData(data);
-setVuLevel(data.reduce((a,b)=>a+b,0)/data.length/255);
-animFrameRef.current=requestAnimationFrame(tick);
-};
-animFrameRef.current=requestAnimationFrame(tick);
-};
-
-const startReelAnim=()=>{
-let a=0;
-const spin=()=>{a+=(pitch*bpm/120)*0.025;setReelAngle(a);reelAnimRef.current=requestAnimationFrame(spin);};
-reelAnimRef.current=requestAnimationFrame(spin);
-};
-
-const startPlayback=useCallback((buf)=>{
-const ctx=audioCtxRef.current;
-if(!ctx||!buf)return;
-stopSourceOnly();
-const sliced=getSlicedBuffer(buf);
-const src=ctx.createBufferSource();
-src.buffer=sliced;src.loop=true;src.playbackRate.value=pitch;
-src.connect(gateGainRef.current);src.start();
-sourceRef.current=src;
-if(tapeWobble>0){
-const wl=ctx.createOscillator();wl.frequency.value=3.5;
-const wg=ctx.createGain();wg.gain.value=tapeWobble*0.03;
-wl.connect(wg);wg.connect(src.playbackRate);wl.start();src._wl=wl;
-}
-setIsPlaying(true);setStatus(“PLAYING”);startGate();startVU();startReelAnim();
-},[bpm,beats,reverse,pitch,tapeWobble,gateIdx,getSlicedBuffer,startGate]);
-
-const loadRandomSample=useCallback(async()=>{
-initAudio();setIsLoading(true);setError(null);stopPlayback();
-// Resume context (required after user gesture on iOS)
-if(audioCtxRef.current&&audioCtxRef.current.state===‘suspended’){
-await audioCtxRef.current.resume();
-}
-const url=AUDIO_POOL[Math.floor(Math.random()*AUDIO_POOL.length)];
-setCurrentUrl(url);
-setStatus(“LOADING…”);
-try{
-const arrayBuf = await fetchAudio(url);
-const decoded=await audioCtxRef.current.decodeAudioData(arrayBuf);
-bufferRef.current=decoded;setLoadedCount(c=>c+1);setIsLoading(false);
-startPlayback(decoded);
-}catch(e){
-setError(“LOAD FAILED”);setIsLoading(false);setStatus(“ERROR”);
-console.error(e);
-}
-},[bpm,beats,reverse,pitch,tapeWobble,initAudio,stopPlayback,startPlayback]);
-
-useEffect(()=>{if(filterRef.current)filterRef.current.frequency.value=filterFreq;},[filterFreq]);
-useEffect(()=>{if(gainRef.current)gainRef.current.gain.value=volume;},[volume]);
-useEffect(()=>{if(reverbRef.current?._wet)reverbRef.current._wet.gain.value=reverbAmount;},[reverbAmount]);
-useEffect(()=>{if(reverbRef.current?._dry)reverbRef.current._dry.gain.value=1-reverbAmount*0.5;},[reverbAmount]);
-useEffect(()=>{if(distortionRef.current)distortionRef.current.curve=makeDistortionCurve(distAmount);},[distAmount]);
-useEffect(()=>{if(flangerRef.current)flangerRef.current.gain.gain.value=flangerAmount*0.7;},[flangerAmount]);
-useEffect(()=>{if(sourceRef.current)sourceRef.current.playbackRate.value=pitch;},[pitch]);
-useEffect(()=>{if(isPlaying&&bufferRef.current)startPlayback(bufferRef.current);},[bpm,beats,reverse,pitch,tapeWobble]);
-useEffect(()=>{if(isPlaying)startGate();},[gateIdx,bpm,isPlaying]);
-useEffect(()=>()=>stopPlayback(),[]);
-
-const filename=currentUrl
-?decodeURIComponent(currentUrl.split(”/”).pop()).replace(/_/g,” “).replace(”.ogg”,””).substring(0,22)
-:“NO TAPE”;
-
-const mkBtn=(active,color,w=40,h=32)=>({
-background:active?`${color}20`:”#0c0a04”,
-color:active?color:”#2e2414”,
-border:`1px solid ${active?color:"#221608"}`,
-borderRadius:3,width:w,height:h,fontSize:12,
-cursor:“pointer”,transition:“all 0.15s”,
-boxShadow:active?`0 0 5px ${color}44`:“none”,
-fontFamily:”‘VT323’,monospace”,
-display:“flex”,alignItems:“center”,justifyContent:“center”,flexShrink:0,
-WebkitAppearance:“none”,outline:“none”,
+bpmContainer.appendChild(btn);
 });
 
-const reelBox={
-background:”#060402”,border:“2px solid #221608”,borderRadius:5,
-width:“22vw”,maxWidth:86,height:“22vw”,maxHeight:86,
-display:“flex”,alignItems:“center”,justifyContent:“center”,
-boxShadow:“inset 0 0 12px rgba(0,0,0,0.9)”,flexShrink:0,
+const beatContainer = document.getElementById(‘beat-btns’);
+BEAT_OPTIONS.forEach(b => {
+const btn = document.createElement(‘button’);
+btn.className = ‘sel-btn’ + (b === beats ? ’ active’ : ‘’);
+btn.textContent = b;
+btn.onclick = () => {
+beats = b;
+beatContainer.querySelectorAll(’.sel-btn’).forEach(x => x.classList.remove(‘active’));
+btn.classList.add(‘active’);
+if (isPlaying && buffer) play(buffer);
 };
+beatContainer.appendChild(btn);
+});
 
-const F=”‘VT323’,monospace”;
+// ── GATE BUTTONS ──────────────────────────────────────────────────────────────
+const gateContainer = document.getElementById(‘gate-btns’);
+const gateVis = document.getElementById(‘gate-vis’);
 
-return (
-<div style={{width:“100vw”,height:“100dvh”,background:”#080604”,display:“flex”,alignItems:“stretch”,justifyContent:“center”,overflow:“hidden”}}>
-{/* MACHINE */}
-<div style={{
-width:“100%”,maxWidth:420,
-background:“linear-gradient(175deg,#1e1408 0%,#140e06 40%,#0c0804 100%)”,
-borderLeft:“1.5px solid #3a2a10”,borderRight:“1.5px solid #3a2a10”,
-display:“flex”,flexDirection:“column”,
-overflow:“hidden”,
-}}>
-
-```
-    {/* ── TOP BADGE ── */}
-    <div style={{background:"linear-gradient(90deg,#140e04,#1e1608,#140e04)",borderBottom:"1.5px solid #2e1e08",padding:"6px 12px",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
-      <div style={{display:"flex",alignItems:"center",gap:7}}>
-        <div style={{width:7,height:7,borderRadius:"50%",background:isPlaying?"#40ff80":"#181208",boxShadow:isPlaying?"0 0 6px #40ff80":"none",transition:"all 0.3s"}}/>
-        <span style={{color:"#c8a060",fontFamily:F,fontSize:15,letterSpacing:4,textShadow:"0 0 6px rgba(200,160,96,0.4)"}}>RT-7600 SAMPLER</span>
-      </div>
-      <span style={{color:"#3a2810",fontFamily:F,fontSize:11,letterSpacing:1}}>×{pitch.toFixed(2)}</span>
-    </div>
-
-    {/* ── REELS ── */}
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 10px 4px",flexShrink:0}}>
-      <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
-        <div style={reelBox}><ReelSVG angle={isPlaying?reelAngle:0} size="88%"/></div>
-        <span style={{color:"#261a08",fontFamily:F,fontSize:9,letterSpacing:2}}>SUPPLY</span>
-      </div>
-
-      <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4,padding:"0 8px",minWidth:0}}>
-        <div style={{background:"#040302",border:"1px solid #221608",borderRadius:3,padding:"4px 7px",width:"100%"}}>
-          <div style={{color:"#221608",fontFamily:F,fontSize:8,letterSpacing:2,marginBottom:1}}>SAMPLE</div>
-          <div style={{color:currentUrl?"#c8a060":"#2e1e08",fontFamily:"'Share Tech Mono',monospace",fontSize:9,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
-            {isLoading?"LOADING...":filename}
-          </div>
-        </div>
-        <div style={{display:"flex",gap:6,alignItems:"center"}}>
-          <VUMeter level={vuLevel}/>
-          <div style={{textAlign:"right"}}>
-            <div style={{color:"#221608",fontFamily:F,fontSize:8,letterSpacing:1}}>LOADED</div>
-            <div style={{color:"#c8a060",fontFamily:F,fontSize:20,letterSpacing:2,lineHeight:1}}>{String(loadedCount).padStart(3,"0")}</div>
-          </div>
-        </div>
-      </div>
-
-      <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
-        <div style={reelBox}><ReelSVG angle={isPlaying?-reelAngle*0.7:0} size="88%"/></div>
-        <span style={{color:"#261a08",fontFamily:F,fontSize:9,letterSpacing:2}}>TAKEUP</span>
-      </div>
-    </div>
-
-    {/* ── TAPE PATH ── */}
-    <div style={{padding:"0 10px 3px",flexShrink:0}}>
-      <svg width="100%" height="16" viewBox="0 0 360 16" preserveAspectRatio="none">
-        <defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#c4956a"/><stop offset="50%" stopColor="#9a5a38"/><stop offset="100%" stopColor="#783a18"/></linearGradient></defs>
-        <rect x="55" y="4" width="8" height="8" rx="1" fill="#1e1408" stroke="#3a2410" strokeWidth="1"/>
-        <rect x="297" y="4" width="8" height="8" rx="1" fill="#1e1408" stroke="#3a2410" strokeWidth="1"/>
-        <rect x="148" y="1" width="64" height="14" rx="2" fill="#180e04" stroke="#c8a060" strokeWidth="1.2"/>
-        <rect x="157" y="4" width="46" height="8" rx="1" fill="#0c0604" stroke="#2a1a08" strokeWidth="0.8"/>
-        <line x1="172" y1="5" x2="172" y2="11" stroke="#c8a060" strokeWidth="0.8"/>
-        <line x1="183" y1="5" x2="183" y2="11" stroke="#c8a060" strokeWidth="0.8"/>
-        <rect x="63" y="6" width="85" height="4" fill="url(#tg)"/>
-        <rect x="212" y="6" width="85" height="4" fill="url(#tg)"/>
-      </svg>
-    </div>
-
-    {/* ── BPM + BEATS ── */}
-    <div style={{padding:"0 10px 4px",display:"flex",gap:5,flexShrink:0}}>
-      <div style={{flex:1,background:"#040302",border:"1px solid #1e1408",borderRadius:3,padding:"4px 7px"}}>
-        <div style={{color:"#221608",fontFamily:F,fontSize:8,letterSpacing:2,marginBottom:3}}>BPM</div>
-        <div style={{display:"flex",gap:2}}>
-          {BPM_OPTIONS.map(b=>(
-            <button key={b} onClick={()=>setBpm(b)} style={{...mkBtn(bpm===b,"#c8a060",0,20),flex:1,fontSize:10,minWidth:0}}>{b}</button>
-          ))}
-        </div>
-      </div>
-      <div style={{background:"#040302",border:"1px solid #1e1408",borderRadius:3,padding:"4px 7px",flexShrink:0}}>
-        <div style={{color:"#221608",fontFamily:F,fontSize:8,letterSpacing:2,marginBottom:3}}>BEATS</div>
-        <div style={{display:"flex",gap:2}}>
-          {BEAT_DIVISIONS.map(b=>(
-            <button key={b} onClick={()=>setBeats(b)} style={{...mkBtn(beats===b,"#c8a060",26,20),fontSize:10}}>{b}</button>
-          ))}
-        </div>
-      </div>
-    </div>
-
-    {/* ── TRANSPORT ── */}
-    <div style={{padding:"0 10px 4px",display:"flex",gap:4,justifyContent:"center",flexShrink:0}}>
-      <button onClick={stopPlayback} style={mkBtn(!isPlaying,"#ff4030",40,34)}>■</button>
-      <button onClick={()=>{initAudio();if(bufferRef.current)startPlayback(bufferRef.current);}} style={mkBtn(isPlaying,"#40ff80",40,34)}>▶</button>
-      <button onClick={loadRandomSample} disabled={isLoading} style={{...mkBtn(true,"#c8a060",64,34),fontSize:isLoading?9:13}}>{isLoading?"LOADING…":"⏏ NEW"}</button>
-      <button onClick={()=>setReverse(r=>!r)} style={{...mkBtn(reverse,"#40a0ff",40,34),fontSize:10}}>REV</button>
-      <button onClick={()=>setPitch(p=>Math.max(0.25,+(p-0.25).toFixed(2)))} style={{...mkBtn(false,"#ff80c0",30,34),fontSize:10}}>▼P</button>
-      <button onClick={()=>setPitch(p=>Math.min(4,+(p+0.25).toFixed(2)))} style={{...mkBtn(false,"#ff80c0",30,34),fontSize:10}}>▲P</button>
-    </div>
-
-    {/* ── DIVIDER ── */}
-    <div style={{height:1,background:"linear-gradient(90deg,transparent,#2e1e0a,transparent)",margin:"0 10px 4px",flexShrink:0}}/>
-
-    {/* ── KNOBS ── */}
-    <div style={{padding:"0 6px 3px",flexShrink:0}}>
-      <div style={{display:"flex",justifyContent:"space-around"}}>
-        <Knob label="FILTER" value={filterFreq} min={80} max={18000} onChange={setFilterFreq} log color="#c8a060" size={40}/>
-        <Knob label="REVERB" value={reverbAmount} min={0} max={1} onChange={setReverbAmount} color="#a060ff" size={40}/>
-        <Knob label="DRIVE" value={distAmount} min={0} max={1} onChange={setDistAmount} color="#ff6030" size={40}/>
-        <Knob label="FLANGE" value={flangerAmount} min={0} max={1} onChange={setFlangerAmount} color="#40c8ff" size={40}/>
-        <Knob label="WOBBLE" value={tapeWobble} min={0} max={1} onChange={setTapeWobble} color="#ffaa20" size={40}/>
-        <Knob label="VOL" value={volume} min={0} max={1} onChange={setVolume} color="#40ff80" size={40}/>
-      </div>
-    </div>
-
-    {/* ── RHYTHM GATE ── */}
-    <div style={{padding:"0 10px 4px",flexShrink:0}}>
-      <div style={{background:"#040302",border:"1px solid #1e1408",borderRadius:3,padding:"5px 8px"}}>
-        <div style={{color:"#221608",fontFamily:F,fontSize:8,letterSpacing:3,marginBottom:4}}>RHYTHM GATE</div>
-        <div style={{display:"flex",gap:3,alignItems:"center",justifyContent:"space-between"}}>
-          <div style={{display:"flex",gap:2,flexWrap:"wrap"}}>
-            {GATE_PATTERNS.map((g,i)=>(
-              <button key={g.name} onClick={()=>setGateIdx(i)} style={{...mkBtn(gateIdx===i,"#c8a060",30,18),fontSize:8}}>{g.name}</button>
-            ))}
-          </div>
-          <div style={{display:"flex",gap:1,flexShrink:0}}>
-            {GATE_PATTERNS[gateIdx].pattern.slice(0,8).map((v,i)=>(
-              <div key={i} style={{width:6,height:13,background:v?"#c8a060":"#0e0c04",border:"1px solid #1e1408",opacity:v?1:0.35}}/>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {/* ── STATUS / ERROR ── */}
-    <div style={{padding:"0 10px 4px",flexShrink:0}}>
-      {error ? (
-        <div style={{padding:"4px 8px",background:"#200808",border:"1px solid #ff4030",borderRadius:3,color:"#ff5040",fontFamily:F,fontSize:11,letterSpacing:2,textAlign:"center"}}>
-          {error} — <span style={{cursor:"pointer",textDecoration:"underline"}} onClick={loadRandomSample}>RETRY</span>
-        </div>
-      ) : (
-        <div style={{padding:"4px 8px",background:"#040302",border:"1px solid #1e1408",borderRadius:3,color:"#3a2a10",fontFamily:F,fontSize:10,letterSpacing:3,textAlign:"center"}}>
-          {status}
-        </div>
-      )}
-    </div>
-
-    {/* ── FILLER — pushes bottom bar down ── */}
-    <div style={{flex:1,background:"linear-gradient(180deg,#0c0804,#080604)",position:"relative",overflow:"hidden"}}>
-      {/* decorative screw corners */}
-      {[[8,8],[8,-8],[-8,8],[-8,-8]].map(([dx,dy],i)=>(
-        <div key={i} style={{position:"absolute",
-          left:dx>0?dx:undefined,right:dx<0?Math.abs(dx):undefined,
-          top:dy>0?dy:undefined,bottom:dy<0?Math.abs(dy):undefined,
-          width:10,height:10,borderRadius:"50%",
-          background:"#1a1208",border:"1px solid #2e1e08",
-          boxShadow:"inset 1px 1px 2px rgba(0,0,0,0.8)"
-        }}/>
-      ))}
-      {/* brand plate */}
-      <div style={{position:"absolute",bottom:8,left:"50%",transform:"translateX(-50%)",
-        border:"1px solid #1e1408",borderRadius:2,padding:"2px 16px",
-        display:"flex",gap:8,alignItems:"center"}}>
-        <span style={{color:"#1e1408",fontFamily:F,fontSize:9,letterSpacing:4,whiteSpace:"nowrap"}}>ANTHROPIC AUDIO SYSTEMS</span>
-      </div>
-    </div>
-
-    {/* ── BOTTOM BAR ── */}
-    <div style={{background:"linear-gradient(90deg,#0e0804,#160e06,#0e0804)",borderTop:"1.5px solid #1e1408",padding:"5px 12px",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
-      <span style={{color:"#181008",fontFamily:F,fontSize:9,letterSpacing:1}}>WIKIMEDIA ENGINE v2.0</span>
-      <span style={{color:"#181008",fontFamily:F,fontSize:9,letterSpacing:1}}>AAS RT-7600</span>
-    </div>
-
-  </div>
-</div>
-```
-
-);
+function buildGateVis() {
+gateVis.innerHTML = ‘’;
+GATE_PATTERNS[gateIdx].p.slice(0, 8).forEach(v => {
+const d = document.createElement(‘div’);
+d.className = ‘gate-step’;
+d.style.background = v ? ‘#c8a060’ : ‘#0e0c04’;
+d.style.opacity = v ? ‘1’ : ‘0.35’;
+gateVis.appendChild(d);
+});
 }
 
-ReactDOM.createRoot(document.getElementById(“root”)).render(<App/>);
+GATE_PATTERNS.forEach((g, i) => {
+const btn = document.createElement(‘button’);
+btn.className = ‘sel-btn gate-btn’ + (i === gateIdx ? ’ active’ : ‘’);
+btn.textContent = g.name;
+btn.onclick = () => {
+gateIdx = i;
+gateContainer.querySelectorAll(’.sel-btn’).forEach(x => x.classList.remove(‘active’));
+btn.classList.add(‘active’);
+buildGateVis();
+if (isPlaying) startGate();
+};
+gateContainer.appendChild(btn);
+});
+buildGateVis();
+
+// ── TRANSPORT BUTTONS ─────────────────────────────────────────────────────────
+document.getElementById(‘btn-stop’).onclick = stopAll;
+document.getElementById(‘btn-play’).onclick = () => { if (ctx && buffer) play(buffer); };
+document.getElementById(‘btn-new’).onclick = loadNew;
+
+document.getElementById(‘btn-rev’).onclick = function() {
+reversed = !reversed;
+this.classList.toggle(‘active’, reversed);
+if (isPlaying && buffer) play(buffer);
+};
+
+document.getElementById(‘btn-pd’).onclick = () => {
+pitch = Math.max(0.25, parseFloat((pitch - 0.25).toFixed(2)));
+updatePitch();
+};
+document.getElementById(‘btn-pu’).onclick = () => {
+pitch = Math.min(4, parseFloat((pitch + 0.25).toFixed(2)));
+updatePitch();
+};
+
+function updatePitch() {
+document.getElementById(‘badge-pitch’).textContent = ‘×’ + pitch.toFixed(2);
+if (source) source.playbackRate.value = pitch;
+}
+
+// Initial stop state
+document.getElementById(‘btn-stop’).classList.add(‘active’);
 </script>
 
 </body>
