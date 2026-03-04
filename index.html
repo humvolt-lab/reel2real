@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -11,62 +10,62 @@
 html,body{width:100%;height:100%;overflow:hidden;background:#1a1208;position:fixed}
 
 #splash{
-position:fixed;inset:0;z-index:100;
-background:linear-gradient(170deg,#2a1e0a,#1a1208,#0e0c06);
-display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;cursor:pointer;
+  position:fixed;inset:0;z-index:100;
+  background:linear-gradient(170deg,#2a1e0a,#1a1208,#0e0c06);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;cursor:pointer;
 }
 #splash-cv{display:block;margin:0 auto 24px}
-#splash-title{color:#e8c870;font-family:‘VT323’,monospace;font-size:30px;letter-spacing:8px;text-shadow:0 0 20px rgba(232,200,112,.5);margin-bottom:4px}
-#splash-sub{color:#7a5a20;font-family:‘VT323’,monospace;font-size:13px;letter-spacing:3px;margin-bottom:36px}
+#splash-title{color:#e8c870;font-family:'VT323',monospace;font-size:30px;letter-spacing:8px;text-shadow:0 0 20px rgba(232,200,112,.5);margin-bottom:4px}
+#splash-sub{color:#7a5a20;font-family:'VT323',monospace;font-size:13px;letter-spacing:3px;margin-bottom:36px}
 #splash-btn{
-background:linear-gradient(180deg,#f0c840,#c89820);color:#1a1000;
-font-family:‘VT323’,monospace;font-size:22px;letter-spacing:4px;
-border:none;border-radius:6px;padding:14px 44px;cursor:pointer;
-box-shadow:0 4px 20px rgba(200,152,32,.5),inset 0 1px 0 rgba(255,255,255,.3);
+  background:linear-gradient(180deg,#f0c840,#c89820);color:#1a1000;
+  font-family:'VT323',monospace;font-size:22px;letter-spacing:4px;
+  border:none;border-radius:6px;padding:14px 44px;cursor:pointer;
+  box-shadow:0 4px 20px rgba(200,152,32,.5),inset 0 1px 0 rgba(255,255,255,.3);
 }
-#splash-hint{color:#3a2a0a;font-family:‘VT323’,monospace;font-size:10px;letter-spacing:2px;margin-top:14px}
+#splash-hint{color:#3a2a0a;font-family:'VT323',monospace;font-size:10px;letter-spacing:2px;margin-top:14px}
 
 #app{
-position:fixed;inset:0;display:flex;flex-direction:column;
-background:linear-gradient(170deg,#f4eedd 0%,#ede4cc 50%,#e4d8bc 100%);
-font-family:‘VT323’,monospace;overflow:hidden;
-opacity:0;pointer-events:none;transition:opacity .4s;
+  position:fixed;inset:0;display:flex;flex-direction:column;
+  background:linear-gradient(170deg,#f4eedd 0%,#ede4cc 50%,#e4d8bc 100%);
+  font-family:'VT323',monospace;overflow:hidden;
+  opacity:0;pointer-events:none;transition:opacity .4s;
 }
 #app.ready{opacity:1;pointer-events:all}
 
 #hdr{
-flex-shrink:0;display:flex;justify-content:space-between;align-items:center;
-padding:5px 14px;
-background:linear-gradient(90deg,#2a1e08,#3a2a10,#2a1e08);
-border-bottom:3px solid #1a1208;box-shadow:0 2px 8px rgba(0,0,0,.4);
+  flex-shrink:0;display:flex;justify-content:space-between;align-items:center;
+  padding:5px 14px;
+  background:linear-gradient(90deg,#2a1e08,#3a2a10,#2a1e08);
+  border-bottom:3px solid #1a1208;box-shadow:0 2px 8px rgba(0,0,0,.4);
 }
 #hdr-title{color:#e8c870;font-size:15px;letter-spacing:5px;cursor:pointer;text-shadow:0 0 8px rgba(232,200,112,.4)}
 #hdr-right{display:flex;align-items:center;gap:8px}
 #master-lbl{color:#a08040;font-size:9px;letter-spacing:1px}
 #global-bpm{display:flex;gap:4px;align-items:center}
 .bpm-btn{
-background:#1a1208;color:#c8a050;border:1px solid #5a3e18;border-radius:3px;
-font-family:‘VT323’,monospace;font-size:13px;cursor:pointer;outline:none;-webkit-appearance:none;
-width:26px;height:22px;display:flex;align-items:center;justify-content:center;
-box-shadow:0 1px 3px rgba(0,0,0,.5);
+  background:#1a1208;color:#c8a050;border:1px solid #5a3e18;border-radius:3px;
+  font-family:'VT323',monospace;font-size:13px;cursor:pointer;outline:none;-webkit-appearance:none;
+  width:26px;height:22px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 1px 3px rgba(0,0,0,.5);
 }
 .bpm-btn:active{background:#2a2010}
 #bpm-val{color:#e8c870;font-size:15px;letter-spacing:1px;min-width:34px;text-align:center}
 
 #grid{
-flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr 1fr;
-gap:2px;background:#b09060;overflow:hidden;padding:2px;
+  flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr 1fr;
+  gap:2px;background:#b09060;overflow:hidden;padding:2px;
 }
 
 .cell{
-background:linear-gradient(155deg,#faf4e4,#f0e8d0,#e8ddc0);
-display:flex;flex-direction:column;align-items:center;
-padding:7px 5px 6px;gap:3px;position:relative;border-radius:4px;
-border:2px solid #c0a870;
-box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 1px 3px rgba(0,0,0,.2);
-overflow:hidden;transition:border-color .25s,box-shadow .25s;
+  background:linear-gradient(155deg,#faf4e4,#f0e8d0,#e8ddc0);
+  display:flex;flex-direction:column;align-items:center;
+  padding:7px 5px 6px;gap:3px;position:relative;border-radius:4px;
+  border:2px solid #c0a870;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 1px 3px rgba(0,0,0,.2);
+  overflow:hidden;transition:border-color .25s,box-shadow .25s;
 }
-.cell::before,.cell::after{content:’’;position:absolute;width:6px;height:6px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#d0c090,#806040);border:1px solid #604020;top:4px}
+.cell::before,.cell::after{content:'';position:absolute;width:6px;height:6px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#d0c090,#806040);border:1px solid #604020;top:4px}
 .cell::before{left:5px}.cell::after{right:5px}
 .cell.playing.c0{border-color:#e06030;box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 0 12px rgba(224,96,48,.5)}
 .cell.playing.c1{border-color:#38b858;box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 0 12px rgba(56,184,88,.5)}
@@ -85,13 +84,13 @@ overflow:hidden;transition:border-color .25s,box-shadow .25s;
 
 .ctrl-row{display:flex;gap:3px;width:100%}
 .cb{
-flex:1;display:flex;align-items:center;justify-content:center;
-background:linear-gradient(180deg,#ffffff,#f0e4c0);color:#2a1600;
-border:1.5px solid #9a7840;border-radius:3px;
-font-family:‘VT323’,monospace;font-size:11px;
-cursor:pointer;outline:none;-webkit-appearance:none;height:22px;
-transition:all .1s;user-select:none;-webkit-user-select:none;min-width:0;padding:0 2px;
-box-shadow:0 1px 3px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.8);
+  flex:1;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,#ffffff,#f0e4c0);color:#2a1600;
+  border:1.5px solid #9a7840;border-radius:3px;
+  font-family:'VT323',monospace;font-size:11px;
+  cursor:pointer;outline:none;-webkit-appearance:none;height:22px;
+  transition:all .1s;user-select:none;-webkit-user-select:none;min-width:0;padding:0 2px;
+  box-shadow:0 1px 3px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.8);
 }
 .cb:active{background:linear-gradient(180deg,#e8ddb0,#d8cc98);box-shadow:inset 0 1px 3px rgba(0,0,0,.25);transform:translateY(1px)}
 .c0 .cb.play-btn.on{background:linear-gradient(180deg,#f08060,#e06030);color:#fff;border-color:#a03010;box-shadow:0 0 8px rgba(224,96,48,.6)}
@@ -109,8 +108,31 @@ box-shadow:0 1px 3px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.8);
 
 @keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
 .pulsing{animation:pulse .7s ease-in-out infinite}
-</style>
 
+/* ── GATE SEQUENCER ── */
+.gate-row{display:flex;gap:2px;width:100%;align-items:center}
+.gate-btn{
+  flex:0 0 auto;
+  background:linear-gradient(180deg,#ffffff,#f0e4c0);color:#2a1600;
+  border:1.5px solid #9a7840;border-radius:3px;
+  font-family:'VT323',monospace;font-size:10px;
+  cursor:pointer;outline:none;-webkit-appearance:none;height:22px;
+  padding:0 4px;white-space:nowrap;
+  box-shadow:0 1px 3px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.8);
+  transition:all .1s;user-select:none;-webkit-user-select:none;
+}
+.gate-btn.gate-on{color:#fff;border-color:var(--tc);}
+.gate-btn:active{transform:translateY(1px)}
+.gate-steps{flex:1;display:grid;grid-template-columns:repeat(16,1fr);gap:1px;height:22px;min-width:0}
+.gs{
+  border-radius:2px;cursor:pointer;
+  background:#d8c898;border:1px solid #b09060;
+  transition:background .08s,box-shadow .08s;
+}
+.gs.active{background:var(--tc);border-color:var(--tc);box-shadow:0 0 4px var(--tc)}
+.gs.playing-step{box-shadow:0 0 7px #fff,0 0 4px var(--tc);filter:brightness(1.3)}
+.gs:active{filter:brightness(1.2)}
+</style>
 </head>
 <body>
 
@@ -300,9 +322,12 @@ function dCurve(a){var k=a*380,n=256,c=new Float32Array(n);for(var i=0;i<n;i++){
 function makeTrack(idx){
   return{idx:idx,col:COLORS[idx],buf:null,src:null,
     gainNd:null,filtNd:null,distNd:null,revNd:null,dryNd:null,wetNd:null,
+    gateNd:null,
     playing:false,loading:false,ang:0,raf:null,
     rev:false,vol:"hi",fxIdx:10,
     loopBeats:2,usedIdxs:[],
+    gateOn:false,gatePattern:new Array(16).fill(1),gateStep:0,
+    gateStepEls:[],gateBtnEl:null,
     cv:null,nameEl:null,fxEl:null,playBtn:null,fxBtn:null,lenBtn:null,revBtn:null,volBtn:null,
     _stutterTimer:null};
 }
@@ -310,12 +335,13 @@ function makeTrack(idx){
 function buildChain(t){
   if(!actx||t.gainNd)return;
   t.gainNd=actx.createGain();t.gainNd.gain.value=t.vol==="hi"?.85:.22;
+  t.gateNd=actx.createGain();t.gateNd.gain.value=1; // gate sits after gainNd
   t.filtNd=actx.createBiquadFilter();t.filtNd.type="lowpass";t.filtNd.frequency.value=18000;
   t.distNd=actx.createWaveShaper();t.distNd.curve=dCurve(0);t.distNd.oversample="4x";
   t.revNd=actx.createConvolver();t.revNd.buffer=makeIR(actx);
   t.dryNd=actx.createGain();t.dryNd.gain.value=1;
   t.wetNd=actx.createGain();t.wetNd.gain.value=0;
-  t.gainNd.connect(t.distNd);t.distNd.connect(t.filtNd);
+  t.gainNd.connect(t.gateNd);t.gateNd.connect(t.distNd);t.distNd.connect(t.filtNd);
   t.filtNd.connect(t.dryNd);t.filtNd.connect(t.revNd);t.revNd.connect(t.wetNd);
   t.dryNd.connect(actx.destination);t.wetNd.connect(actx.destination);
 }
@@ -351,12 +377,15 @@ function sliceBuf(t){
 function stopTrack(t){
   if(t.src){try{t.src.stop();}catch(e){}try{if(t.src._wl)t.src._wl.stop();}catch(e){}t.src=null;}
   if(t._stutterTimer){clearInterval(t._stutterTimer);t._stutterTimer=null;}
+  // reset gate gain so it doesn't stay silent
+  if(t.gateNd&&actx)t.gateNd.gain.setTargetAtTime(1,actx.currentTime,.01);
   t.playing=false;
   if(t.raf){cancelAnimationFrame(t.raf);t.raf=null;}
   if(t.cv)drawReel(t.cv,t.ang,t.col,false);
   updatePlayBtn(t);
   var cell=document.getElementById("cell"+t.idx);
   if(cell)cell.classList.remove("playing");
+  syncGateClock();
 }
 
 function startTrack(t){
@@ -389,12 +418,119 @@ function startTrack(t){
   if(cell)cell.classList.add("playing");
   if(t.raf){cancelAnimationFrame(t.raf);t.raf=null;}
   (function spin(){t.ang+=(bpm/120)*.022;if(t.ang>Math.PI*200)t.ang-=Math.PI*200;drawReel(t.cv,t.ang,t.col,true);t.raf=requestAnimationFrame(spin);})();
+  syncGateClock();
 }
 
 function updatePlayBtn(t){
   if(!t.playBtn)return;
   if(t.playing){t.playBtn.textContent="■";t.playBtn.classList.add("on");}
   else{t.playBtn.textContent="▶";t.playBtn.classList.remove("on");}
+}
+
+/* ── GATE SEQUENCER ENGINE ── */
+// Musically interesting pattern presets — weighted toward syncopation
+var GATE_PRESETS=[
+  [1,0,0,1,0,0,1,0,1,0,0,1,0,0,1,0], // clave 3-2
+  [1,0,1,0,0,1,0,1,1,0,1,0,0,1,0,0], // habanera feel
+  [1,0,0,0,1,0,1,0,0,0,1,0,1,0,0,0], // sparse
+  [1,1,0,1,0,1,1,0,1,1,0,1,0,1,1,0], // dense broken
+  [1,0,0,1,0,1,0,0,1,0,0,1,0,1,0,0], // tresillo-ish
+  [1,0,1,1,0,0,1,0,1,0,1,1,0,0,1,0], // displaced pairs
+  [1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0], // very sparse
+  [1,1,0,0,1,1,0,1,1,0,0,1,1,0,1,0], // machine gun
+  [1,0,1,0,1,0,1,0,0,1,0,1,0,1,0,1], // alternating 8ths
+  [1,0,0,1,1,0,0,1,0,1,1,0,1,0,0,1], // syncopated 4/4
+];
+
+function randomGatePattern(){
+  // 50% chance: pick a preset; 50% chance: pure random with density bias
+  if(Math.random()<0.5){
+    return GATE_PRESETS[Math.floor(Math.random()*GATE_PRESETS.length)].slice();
+  }
+  var density=0.3+Math.random()*0.5; // 30–80% density
+  return Array.from({length:16},function(){return Math.random()<density?1:0;});
+}
+
+function applyGateStep(t,step){
+  if(!t.gateNd||!actx)return;
+  var now=actx.currentTime;
+  if(t.gateOn){
+    var on=t.gatePattern[step%16];
+    // Hard gate: snap open/closed with very short ramp (2ms) to avoid clicks
+    t.gateNd.gain.cancelScheduledValues(now);
+    t.gateNd.gain.setValueAtTime(t.gateNd.gain.value,now);
+    t.gateNd.gain.linearRampToValueAtTime(on?1:0,now+0.002);
+  } else {
+    t.gateNd.gain.setTargetAtTime(1,now,0.01);
+  }
+}
+
+function updateGateStepUI(t,step){
+  if(!t.gateStepEls||!t.gateStepEls.length)return;
+  var cur=step%16;
+  t.gateStepEls.forEach(function(el,i){
+    el.classList.toggle('active',!!t.gatePattern[i]);
+    el.classList.toggle('playing-step',t.gateOn&&i===cur&&t.playing);
+  });
+}
+
+function toggleGate(t){
+  if(t.gateOn){
+    // Turn off — open gate fully
+    t.gateOn=false;
+    if(t.gateNd&&actx)t.gateNd.gain.setTargetAtTime(1,actx.currentTime,0.01);
+    t.gateBtnEl.classList.remove('gate-on');
+    t.gateBtnEl.textContent='GATE';
+  } else {
+    // Turn on — randomize pattern first
+    t.gatePattern=randomGatePattern();
+    t.gateOn=true;
+    t.gateBtnEl.classList.add('gate-on');
+    t.gateBtnEl.textContent='GATE';
+    renderGateSteps(t);
+  }
+  updateGateStepUI(t,t.gateStep);
+}
+
+function renderGateSteps(t){
+  t.gateStepEls.forEach(function(el,i){
+    el.classList.toggle('active',!!t.gatePattern[i]);
+  });
+}
+
+/* ── SHARED GATE CLOCK ── */
+var gateClockTimer=null;
+var globalGateStep=0;
+
+function startGateClock(){
+  if(gateClockTimer)return;
+  function tick(){
+    var stepDur=(60000/bpm)/4; // 16th note in ms
+    tracks.forEach(function(t){
+      applyGateStep(t,globalGateStep);
+      updateGateStepUI(t,globalGateStep);
+    });
+    globalGateStep=(globalGateStep+1)%16;
+    gateClockTimer=setTimeout(tick,stepDur);
+  }
+  tick();
+}
+
+function stopGateClock(){
+  if(gateClockTimer){clearTimeout(gateClockTimer);gateClockTimer=null;}
+  globalGateStep=0;
+  // Open all gates
+  tracks.forEach(function(t){
+    if(t.gateNd&&actx)t.gateNd.gain.setTargetAtTime(1,actx.currentTime,0.01);
+    updateGateStepUI(t,0);
+  });
+}
+
+// Start clock whenever any track is playing with gate on, stop when none
+function syncGateClock(){
+  var need=tracks.some(function(t){return t.gateOn&&t.playing;});
+  if(need&&!gateClockTimer)startGateClock();
+  else if(!need&&gateClockTimer)stopGateClock();
 }
 
 /* ── LOAD — plain fetch, exact same as VON BASEMENT ── */
@@ -479,7 +615,9 @@ function onVol(t,btn){
 calcReelSz();
 function buildCell(idx){
   var t=tracks[idx];
+  var tc=t.col; // track colour for CSS var
   var cell=document.createElement("div");cell.className="cell c"+idx;cell.id="cell"+idx;
+  cell.style.setProperty('--tc',tc);
   var rw=document.createElement("div");rw.className="reel-wrap";
   var cv=document.createElement("canvas");cv.className="reel-cv";
   cv.width=REEL_SZ;cv.height=REEL_SZ;cv.style.width=REEL_SZ+"px";cv.style.height=REEL_SZ+"px";
@@ -492,14 +630,49 @@ function buildCell(idx){
   var lb=document.createElement("button");lb.className="cb";lb.textContent="LEN";lb.addEventListener("click",function(){onLen(t);});t.lenBtn=lb;row.appendChild(lb);
   var rb=document.createElement("button");rb.className="cb";rb.textContent="REV";rb.addEventListener("click",function(){onRev(t,rb);});t.revBtn=rb;row.appendChild(rb);
   var vb=document.createElement("button");vb.className="cb vol-btn hi";vb.textContent="HI";vb.addEventListener("click",function(){onVol(t,vb);});t.volBtn=vb;row.appendChild(vb);
-  cell.appendChild(row);drawReel(cv,0,t.col,false);return cell;
+  cell.appendChild(row);
+
+  // ── GATE ROW ──
+  var grow=document.createElement("div");grow.className="gate-row";
+  var gb=document.createElement("button");gb.className="gate-btn";gb.textContent="GATE";
+  gb.style.setProperty('--tc',tc);
+  gb.addEventListener("click",function(){
+    toggleGate(t);
+    syncGateClock();
+  });
+  t.gateBtnEl=gb;grow.appendChild(gb);
+
+  // 16 step dots
+  var gs=document.createElement("div");gs.className="gate-steps";
+  gs.style.setProperty('--tc',tc);
+  t.gateStepEls=[];
+  for(var s=0;s<16;s++){
+    (function(si){
+      var dot=document.createElement("div");dot.className="gs";
+      // tap individual step to toggle it
+      dot.addEventListener("click",function(){
+        t.gatePattern[si]=t.gatePattern[si]?0:1;
+        dot.classList.toggle('active',!!t.gatePattern[si]);
+      });
+      t.gateStepEls.push(dot);gs.appendChild(dot);
+    })(s);
+  }
+  grow.appendChild(gs);
+  cell.appendChild(grow);
+
+  drawReel(cv,0,t.col,false);return cell;
 }
 
 var grid=document.getElementById("grid");
 for(var i=0;i<NUM;i++){tracks.push(makeTrack(i));grid.appendChild(buildCell(i));}
 
 /* ── BPM ── */
-function setBPM(v){bpm=Math.max(40,Math.min(240,v));document.getElementById("bpm-val").textContent=bpm;}
+function setBPM(v){
+  bpm=Math.max(40,Math.min(240,v));
+  document.getElementById("bpm-val").textContent=bpm;
+  // Restart gate clock so 16th-note interval updates immediately
+  if(gateClockTimer){stopGateClock();syncGateClock();}
+}
 document.getElementById("bpm-dn").addEventListener("click",function(){setBPM(bpm-5);});
 document.getElementById("bpm-up").addEventListener("click",function(){setBPM(bpm+5);});
 var bpmHold=null;
@@ -520,6 +693,5 @@ window.addEventListener("resize",function(){
 
 })();
 </script>
-
 </body>
 </html>
