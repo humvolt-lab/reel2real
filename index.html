@@ -132,6 +132,33 @@ html,body{width:100%;height:100%;overflow:hidden;background:#1a1208;position:fix
 .gs.active{background:var(--tc);border-color:var(--tc);box-shadow:0 0 4px var(--tc)}
 .gs.playing-step{box-shadow:0 0 7px #fff,0 0 4px var(--tc);filter:brightness(1.3)}
 .gs:active{filter:brightness(1.2)}
+
+/* ── DRUM MACHINE CELL ── */
+.cell-drum{background:linear-gradient(155deg,#1a1c2a,#12141e,#0e101a)!important;border-color:#2a2d42!important;}
+.cell-drum::before,.cell-drum::after{background:radial-gradient(circle at 35% 35%,#3a3d5a,#1a1d2e)!important;border-color:#2a2d42!important;}
+.cell-drum .cell-name{color:#8890b8!important;}
+.cell-drum .cell-name.lit{color:#c0c8f0!important;}
+.dm-label{font-size:9px;letter-spacing:2px;color:#5058a0;text-align:center;line-height:1;min-height:11px;width:100%}
+.dm-grid{width:100%;display:grid;grid-template-rows:repeat(4,1fr);gap:2px;flex:1;min-height:0}
+.dm-row{display:grid;grid-template-columns:26px 1fr;gap:2px;align-items:center;min-height:0}
+.dm-name{font-size:8px;letter-spacing:0;color:#6068a8;text-align:right;padding-right:2px;white-space:nowrap;overflow:hidden}
+.dm-steps{display:grid;grid-template-columns:repeat(16,1fr);gap:1px;height:100%}
+.ds{border-radius:2px;cursor:pointer;background:#1e2038;border:1px solid #2a2e4a;transition:background .06s,box-shadow .06s;}
+.ds.on{background:var(--dc);border-color:var(--dc);box-shadow:0 0 5px var(--dc)}
+.ds.cur{box-shadow:0 0 8px #fff,0 0 4px var(--dc);filter:brightness(1.4)}
+.dm-ctrl{display:flex;gap:3px;width:100%}
+.dm-btn{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,#2a2e48,#1e2038);color:#8890c8;
+  border:1.5px solid #3a3e60;border-radius:3px;
+  font-family:'VT323',monospace;font-size:11px;
+  cursor:pointer;outline:none;-webkit-appearance:none;height:22px;
+  transition:all .1s;user-select:none;-webkit-user-select:none;padding:0 3px;
+  box-shadow:0 1px 3px rgba(0,0,0,.5);
+}
+.dm-btn:active{background:linear-gradient(180deg,#3a3e60,#2a2e48);transform:translateY(1px)}
+.dm-btn.dm-play-on{background:linear-gradient(180deg,#4050d8,#2838c0);color:#fff;border-color:#6878f0;box-shadow:0 0 10px rgba(80,100,220,.6)}
+.dm-btn.flash{background:linear-gradient(180deg,#5060e8,#3848d0);color:#fff;border-color:#8090ff}
 </style>
 </head>
 <body>
@@ -510,6 +537,7 @@ function startGateClock(){
       applyGateStep(t,globalGateStep);
       updateGateStepUI(t,globalGateStep);
     });
+    dmTick(globalGateStep);
     globalGateStep=(globalGateStep+1)%16;
     gateClockTimer=setTimeout(tick,stepDur);
   }
@@ -526,9 +554,9 @@ function stopGateClock(){
   });
 }
 
-// Start clock whenever any track is playing with gate on, stop when none
+// Start clock whenever any track is playing with gate on or drum machine is playing
 function syncGateClock(){
-  var need=tracks.some(function(t){return t.gateOn&&t.playing;});
+  var need=tracks.some(function(t){return t.gateOn&&t.playing;})||dm.playing;
   if(need&&!gateClockTimer)startGateClock();
   else if(!need&&gateClockTimer)stopGateClock();
 }
@@ -664,7 +692,419 @@ function buildCell(idx){
 }
 
 var grid=document.getElementById("grid");
-for(var i=0;i<NUM;i++){tracks.push(makeTrack(i));grid.appendChild(buildCell(i));}
+for(var i=0;i<NUM;i++){
+  tracks.push(makeTrack(i));
+  if(i===5) grid.appendChild(buildDrumCell());
+  else grid.appendChild(buildCell(i));
+}
+
+/* ══════════════════════════════════════════
+   DRUM MACHINE ENGINE
+   4 channels: kick, snare, hat, perc
+   Each channel has its own synth voice pool
+   Randomize beat = new 16-step patterns
+   Randomize sound = new synth params per voice
+═══════════════════════════════════════════ */
+
+var dm = {
+  playing: false,
+  step: 0,
+  patterns: [[],[],[],[]],   // 4 rows × 16 steps
+  voices: [],                 // 4 voice param objects
+  stepEls: [[],[],[],[]],     // DOM step buttons
+  nameEls: [],                // 4 label DOM elements
+  playBtn: null,
+  outGain: null,
+};
+
+// Row colours
+var DM_COLORS = ["#e84060","#f0a020","#40c8f0","#a060f8"];
+var DM_NAMES  = [["KICK","K"],["SNARE","S"],["HAT","HH"],["PERC","P"]];
+
+/* ── VOICE DEFINITIONS ── */
+// Each voice type is a function(actx, params, dest, time)
+// params are randomised by randomizeSounds()
+
+function dmMakeVoiceParams(row){
+  // Returns a random params object appropriate for the row type
+  var r=Math.random;
+  if(row===0){ // KICK
+    var styles=["909","808","elec","punch","sub"];
+    return {style:styles[Math.floor(r()*styles.length)],
+      freq:40+r()*60, sweep:2+r()*6, decay:0.15+r()*0.5,
+      click:0.3+r()*0.7, body:0.5+r()*0.5, distAmt:r()*0.6};
+  }
+  if(row===1){ // SNARE
+    var styles=["crisp","fat","rimshot","clap","electro"];
+    return {style:styles[Math.floor(r()*styles.length)],
+      tone:150+r()*200, snap:0.04+r()*0.12, noise:0.3+r()*0.7,
+      crack:r()*0.8, pitch:0.8+r()*0.4};
+  }
+  if(row===2){ // HAT
+    var styles=["open","closed","metallic","shaker","cymbal"];
+    return {style:styles[Math.floor(r()*styles.length)],
+      decay: r()<0.4 ? 0.05+r()*0.08 : 0.12+r()*0.6,
+      freq:5000+r()*8000, res:0.5+r()*3, bright:r()};
+  }
+  // PERC
+  var styles=["tom","clave","cowbell","blip","zap","rim"];
+  return {style:styles[Math.floor(r()*styles.length)],
+    freq:80+r()*600, decay:0.05+r()*0.3, sweep:1+r()*4,
+    noise:r()*0.4, body:0.4+r()*0.6};
+}
+
+function dmInitVoices(){
+  dm.voices=[];
+  for(var i=0;i<4;i++) dm.voices.push(dmMakeVoiceParams(i));
+  if(dm.nameEls.length){
+    dm.nameEls.forEach(function(el,i){
+      if(el) el.textContent = dmVoiceLabel(i);
+    });
+  }
+}
+
+function dmVoiceLabel(row){
+  var p=dm.voices[row];
+  if(!p) return DM_NAMES[row][0];
+  return (p.style||DM_NAMES[row][0]).toUpperCase();
+}
+
+/* ── DRUM SYNTHESIS ── */
+function dmFireStep(row, time){
+  if(!actx||!dm.outGain) return;
+  var p=dm.voices[row];
+  var dest=dm.outGain;
+  var t=Math.max(time, actx.currentTime+0.001);
+
+  if(row===0) dmKick(p,t,dest);
+  else if(row===1) dmSnare(p,t,dest);
+  else if(row===2) dmHat(p,t,dest);
+  else dmPerc(p,t,dest);
+}
+
+function dmEnv(dest,t,peak,decay,curve){
+  var g=actx.createGain();
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.linearRampToValueAtTime(peak,t+0.002);
+  if(curve==="exp") g.gain.exponentialRampToValueAtTime(0.0001,t+decay);
+  else g.gain.linearRampToValueAtTime(0.0001,t+decay);
+  g.connect(dest);
+  return g;
+}
+
+function dmNoiseBuf(dur){
+  var n=Math.ceil(actx.sampleRate*dur),b=actx.createBuffer(1,n,actx.sampleRate);
+  var d=b.getChannelData(0);for(var i=0;i<n;i++)d[i]=Math.random()*2-1;
+  var s=actx.createBufferSource();s.buffer=b;return s;
+}
+
+function dmKick(p,t,dest){
+  var style=p.style||"909";
+  var env=dmEnv(dest,t,0.9,p.decay,"exp");
+
+  // Sub/body sine
+  var osc=actx.createOscillator(); osc.type="sine";
+  var startFreq=p.freq*p.sweep, endFreq=Math.max(p.freq,20);
+  osc.frequency.setValueAtTime(startFreq,t);
+  osc.frequency.exponentialRampToValueAtTime(endFreq,t+p.decay*0.4);
+  osc.connect(env); osc.start(t); osc.stop(t+p.decay+0.05);
+
+  // Click transient
+  if(p.click>0.1){
+    var cg=actx.createGain(); cg.gain.setValueAtTime(p.click*0.8,t);
+    cg.gain.exponentialRampToValueAtTime(0.0001,t+0.018);
+    var cfilt=actx.createBiquadFilter(); cfilt.type="bandpass";
+    cfilt.frequency.value=style==="808"?100:200; cfilt.Q.value=0.8;
+    var cn=dmNoiseBuf(0.02); cn.connect(cfilt); cfilt.connect(cg); cg.connect(dest);
+    cn.start(t); cn.stop(t+0.025);
+  }
+
+  // Distortion layer for punch/electro styles
+  if(style==="punch"||style==="elec"||(p.distAmt>0.3)){
+    var dg=actx.createGain(); dg.gain.value=0.5;
+    var ws=actx.createWaveShaper(); ws.curve=dCurve(p.distAmt);
+    var osc2=actx.createOscillator(); osc2.type=style==="elec"?"square":"triangle";
+    osc2.frequency.setValueAtTime(p.freq*p.sweep*0.7,t);
+    osc2.frequency.exponentialRampToValueAtTime(p.freq,t+p.decay*0.2);
+    var env2=dmEnv(dest,t,0.4,p.decay*0.5,"exp");
+    osc2.connect(ws); ws.connect(dg); dg.connect(env2);
+    osc2.start(t); osc2.stop(t+p.decay*0.6);
+  }
+}
+
+function dmSnare(p,t,dest){
+  var style=p.style||"crisp";
+
+  if(style==="clap"){
+    // Layered noise bursts
+    [0,0.006,0.012].forEach(function(offset){
+      var ng=actx.createGain(); ng.gain.setValueAtTime(0.5,t+offset);
+      ng.gain.exponentialRampToValueAtTime(0.0001,t+offset+p.snap*1.5);
+      var nb=actx.createBiquadFilter(); nb.type="bandpass";
+      nb.frequency.value=1200; nb.Q.value=0.8;
+      var ns=dmNoiseBuf(p.snap+0.05); ns.connect(nb); nb.connect(ng); ng.connect(dest);
+      ns.start(t+offset); ns.stop(t+offset+p.snap+0.06);
+    });
+    return;
+  }
+
+  // Tonal body
+  var osc=actx.createOscillator();
+  osc.type=style==="rimshot"?"square":"triangle";
+  osc.frequency.value=p.tone*(style==="rimshot"?1.8:1);
+  var env1=dmEnv(dest,t,p.body*(style==="fat"?0.5:0.3),p.snap*0.7,"exp");
+  osc.connect(env1); osc.start(t); osc.stop(t+p.snap+0.05);
+
+  // Noise layer
+  var filt=actx.createBiquadFilter();
+  filt.type=style==="electro"?"highpass":"bandpass";
+  filt.frequency.value=style==="electro"?3000:2200; filt.Q.value=style==="crisp"?0.6:1.2;
+  var ng=actx.createGain(); ng.gain.setValueAtTime(p.noise*(style==="fat"?0.7:0.9),t);
+  ng.gain.exponentialRampToValueAtTime(0.0001,t+p.snap+(style==="fat"?0.06:0.02));
+  var ns=dmNoiseBuf(p.snap+0.08); ns.connect(filt); filt.connect(ng); ng.connect(dest);
+  ns.start(t); ns.stop(t+p.snap+0.1);
+
+  // Crack layer
+  if(p.crack>0.2){
+    var cg=actx.createGain(); cg.gain.setValueAtTime(p.crack*0.6,t);
+    cg.gain.exponentialRampToValueAtTime(0.0001,t+0.012);
+    var cf=actx.createBiquadFilter(); cf.type="highpass"; cf.frequency.value=6000;
+    var cs=dmNoiseBuf(0.015); cs.connect(cf); cf.connect(cg); cg.connect(dest);
+    cs.start(t); cs.stop(t+0.02);
+  }
+}
+
+function dmHat(p,t,dest){
+  var dur=p.decay;
+  // Metallic hat: mix of detuned square oscillators + highpass noise
+  var masterEnv=dmEnv(dest,t,0.55,dur,"exp");
+
+  // 6 detuned oscillators for metallic ring
+  var freqs=[p.freq,p.freq*1.414,p.freq*1.732,p.freq*2.198,p.freq*2.667,p.freq*3.175];
+  freqs.forEach(function(f){
+    if(f>actx.sampleRate*0.45) return;
+    var o=actx.createOscillator(); o.type="square";
+    o.frequency.value=f;
+    var og=actx.createGain(); og.gain.value=0.12;
+    o.connect(og); og.connect(masterEnv);
+    o.start(t); o.stop(t+dur+0.02);
+  });
+
+  // Noise layer
+  var hp=actx.createBiquadFilter(); hp.type="highpass";
+  hp.frequency.value=p.freq*0.6; hp.Q.value=p.res;
+  var ng=dmEnv(dest,t,p.bright*0.3,dur*0.7,"exp");
+  var ns=dmNoiseBuf(dur+0.02); ns.connect(hp); hp.connect(ng);
+  ns.start(t); ns.stop(t+dur+0.03);
+}
+
+function dmPerc(p,t,dest){
+  var style=p.style||"tom";
+
+  if(style==="clave"||style==="rim"){
+    // Short pitched click
+    var o=actx.createOscillator(); o.type="triangle";
+    o.frequency.setValueAtTime(p.freq*2,t);
+    o.frequency.exponentialRampToValueAtTime(p.freq,t+0.015);
+    var eg=dmEnv(dest,t,0.6,0.04+p.decay*0.3,"exp");
+    o.connect(eg); o.start(t); o.stop(t+0.1);
+    return;
+  }
+  if(style==="cowbell"){
+    var freqs=[p.freq,p.freq*1.507];
+    freqs.forEach(function(f,i){
+      var o=actx.createOscillator(); o.type="square";
+      o.frequency.value=Math.min(f,actx.sampleRate*0.45);
+      var eg=dmEnv(dest,t,i===0?0.5:0.3,p.decay,"exp");
+      o.connect(eg); o.start(t); o.stop(t+p.decay+0.05);
+    });
+    return;
+  }
+  if(style==="blip"||style==="zap"){
+    var o=actx.createOscillator(); o.type=style==="zap"?"sawtooth":"sine";
+    o.frequency.setValueAtTime(p.freq*p.sweep,t);
+    o.frequency.exponentialRampToValueAtTime(Math.max(p.freq*0.3,20),t+p.decay);
+    var flt=actx.createBiquadFilter(); flt.type="lowpass";
+    flt.frequency.value=style==="zap"?3000:p.freq*4;
+    var eg=dmEnv(dest,t,0.55,p.decay,"exp");
+    o.connect(flt); flt.connect(eg); o.start(t); o.stop(t+p.decay+0.05);
+    return;
+  }
+  // TOM
+  var o=actx.createOscillator(); o.type="sine";
+  o.frequency.setValueAtTime(p.freq*p.sweep,t);
+  o.frequency.exponentialRampToValueAtTime(Math.max(p.freq,20),t+p.decay*0.5);
+  var eg=dmEnv(dest,t,p.body*0.7,p.decay,"exp");
+  o.connect(eg); o.start(t); o.stop(t+p.decay+0.05);
+  if(p.noise>0.15){
+    var nf=actx.createBiquadFilter(); nf.type="bandpass";
+    nf.frequency.value=p.freq*2; nf.Q.value=1.5;
+    var ng=dmEnv(dest,t,p.noise*0.4,p.decay*0.4,"exp");
+    var ns=dmNoiseBuf(p.decay+0.02); ns.connect(nf); nf.connect(ng);
+    ns.start(t); ns.stop(t+p.decay+0.04);
+  }
+}
+
+/* ── DRUM PATTERNS ── */
+// Musically weighted pattern generators per row
+function dmRandomPattern(row){
+  var r=Math.random;
+  // Kick patterns — always hit beat 1, vary the rest
+  if(row===0){
+    var presets=[
+      [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
+      [1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0],
+      [1,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0],
+      [1,0,0,0,1,0,0,0,1,0,0,0,0,1,0,0],
+      [1,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0],
+      [1,0,1,0,0,0,0,0,1,0,0,0,1,0,0,0],
+    ];
+    return presets[Math.floor(r()*presets.length)];
+  }
+  // Snare — backbeat on 5 and 13 (beats 2&4), sometimes displaced
+  if(row===1){
+    var base=[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0];
+    // Occasionally add ghost hits or displace
+    if(r()<0.4){base[Math.floor(r()*16)]=r()<0.5?1:0;}
+    if(r()<0.3){base[Math.floor(r()*16)]=1;}
+    return base;
+  }
+  // Hat — various 16th-note patterns
+  if(row===2){
+    var presets=[
+      [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],
+      [1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1],
+      [1,0,0,1,0,0,1,0,1,0,0,1,0,0,1,0],
+      [0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1],
+      [1,0,1,1,0,1,0,1,1,0,1,1,0,1,0,1],
+      [1,1,1,0,1,0,1,1,1,0,1,0,1,1,0,1],
+    ];
+    return presets[Math.floor(r()*presets.length)];
+  }
+  // Perc — sparse, syncopated
+  var presets=[
+    [0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0],
+    [0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0],
+    [0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0],
+    [1,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0],
+    [0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,1],
+  ];
+  return presets[Math.floor(r()*presets.length)];
+}
+
+function dmRandomizePatterns(){
+  dm.patterns=dm.patterns.map(function(_,row){return dmRandomPattern(row);});
+  dmRenderSteps();
+}
+
+function dmRenderSteps(){
+  dm.patterns.forEach(function(pat,row){
+    pat.forEach(function(on,si){
+      var el=dm.stepEls[row][si];
+      if(el) el.classList.toggle("on",!!on);
+    });
+  });
+}
+
+/* ── DRUM CELL UI ── */
+function buildDrumCell(){
+  var cell=document.createElement("div");
+  cell.className="cell c5 cell-drum";cell.id="cell5";
+  cell.style.setProperty("--tc","#6878f0");
+
+  // Corner screws still come from ::before/::after
+
+  var lbl=document.createElement("div");lbl.className="dm-label";lbl.textContent="— DRUM MACHINE —";cell.appendChild(lbl);
+
+  // Step grid
+  var dgrid=document.createElement("div");dgrid.className="dm-grid";
+  DM_NAMES.forEach(function(names,row){
+    var drow=document.createElement("div");drow.className="dm-row";
+    drow.style.setProperty("--dc",DM_COLORS[row]);
+
+    var dnm=document.createElement("div");dnm.className="dm-name";dnm.textContent=names[1];
+    dm.nameEls[row]=dnm;drow.appendChild(dnm);
+
+    var dsteps=document.createElement("div");dsteps.className="dm-steps";
+    dsteps.style.setProperty("--dc",DM_COLORS[row]);
+    dm.stepEls[row]=[];
+    for(var s=0;s<16;s++){
+      (function(si,r){
+        var ds=document.createElement("div");ds.className="ds";
+        ds.addEventListener("click",function(){
+          dm.patterns[r][si]=dm.patterns[r][si]?0:1;
+          ds.classList.toggle("on",!!dm.patterns[r][si]);
+        });
+        dm.stepEls[r][si]=ds;dsteps.appendChild(ds);
+      })(s,row);
+    }
+    drow.appendChild(dsteps);dgrid.appendChild(drow);
+  });
+  cell.appendChild(dgrid);
+
+  // Controls
+  var ctrl=document.createElement("div");ctrl.className="dm-ctrl";
+
+  var pb=document.createElement("button");pb.className="dm-btn";pb.textContent="▶ PLAY";
+  pb.addEventListener("click",function(){dmTogglePlay(pb);});
+  dm.playBtn=pb;ctrl.appendChild(pb);
+
+  var rb=document.createElement("button");rb.className="dm-btn";rb.textContent="⟳ BEAT";
+  rb.addEventListener("click",function(){
+    dmRandomizePatterns();
+    rb.classList.add("flash");setTimeout(function(){rb.classList.remove("flash");},300);
+  });ctrl.appendChild(rb);
+
+  var sb=document.createElement("button");sb.className="dm-btn";sb.textContent="◈ SOUND";
+  sb.addEventListener("click",function(){
+    dmInitVoices();
+    sb.classList.add("flash");setTimeout(function(){sb.classList.remove("flash");},300);
+  });ctrl.appendChild(sb);
+
+  cell.appendChild(ctrl);
+  return cell;
+}
+
+/* ── DRUM PLAYBACK ── */
+function dmTogglePlay(btn){
+  dm.playing=!dm.playing;
+  if(dm.playing){
+    if(!actx) return;
+    if(!dm.outGain){
+      dm.outGain=actx.createGain();dm.outGain.gain.value=0.75;
+      dm.outGain.connect(actx.destination);
+    }
+    dmInitVoices();
+    dmRandomizePatterns();
+    dm.step=0;
+    btn.textContent="■ STOP";btn.classList.add("dm-play-on");
+    syncGateClock(); // piggyback on same clock
+  } else {
+    dm.step=0;
+    btn.textContent="▶ PLAY";btn.classList.remove("dm-play-on");
+    // Clear step highlights
+    dm.stepEls.forEach(function(row){row.forEach(function(el){el.classList.remove("cur");});});
+  }
+}
+
+// Called by gate clock every 16th note
+function dmTick(step){
+  if(!dm.playing||!actx) return;
+  var s=step%16;
+  var stepDur=(60/bpm)/4;
+  var fireTime=actx.currentTime;
+
+  // Highlight playhead
+  dm.stepEls.forEach(function(row,ri){
+    row.forEach(function(el,si){el.classList.toggle("cur",si===s&&dm.patterns[ri][si]);});
+  });
+
+  // Fire active steps
+  dm.patterns.forEach(function(pat,row){
+    if(pat[s]) dmFireStep(row,fireTime);
+  });
+}
+
 
 /* ── BPM ── */
 function setBPM(v){
