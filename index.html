@@ -248,7 +248,7 @@ var FX_NAMES=["REVERB","FILTER LO","FILTER HI","DRIVE","FLANGE","WOBBLE","STUTTE
 var BEAT_DIVS=[0.25,0.5,1,2,4];
 var BEAT_LABELS={"0.25":"1/4","0.5":"1/2","1":"1B","2":"2B","4":"4B"};
 
-var bpm=120, actx=null, tracks=[], NUM=6, REEL_SZ=80;
+var bpm=120, actx=null, tracks=[], NUM=5, REEL_SZ=80;
 
 /* ── SPLASH REEL ── */
 (function(){
@@ -285,8 +285,15 @@ function dismissSplash(){
   setTimeout(function(){sp.style.display="none";},500);
   document.getElementById("app").classList.add("ready");
 
-  // Stagger loads 600ms apart so iOS doesn't choke
+  // Stagger loads 600ms apart so iOS doesn't choke — tape tracks only (not drum cell)
   tracks.forEach(function(t,i){setTimeout(function(){onLoad(t);},i*600);});
+  // Pre-init drum outGain while we have the user gesture
+  setTimeout(function(){
+    if(!dm.outGain&&actx){
+      dm.outGain=actx.createGain();dm.outGain.gain.value=0.75;
+      dm.outGain.connect(actx.destination);
+    }
+  },100);
 }
 document.getElementById("splash-btn").addEventListener("click",dismissSplash);
 document.getElementById("splash").addEventListener("click",dismissSplash);
@@ -694,9 +701,10 @@ function buildCell(idx){
 var grid=document.getElementById("grid");
 for(var i=0;i<NUM;i++){
   tracks.push(makeTrack(i));
-  if(i===5) grid.appendChild(buildDrumCell());
-  else grid.appendChild(buildCell(i));
+  grid.appendChild(buildCell(i));
 }
+// Slot 6: drum machine replaces last tape reel
+grid.appendChild(buildDrumCell());
 
 /* ══════════════════════════════════════════
    DRUM MACHINE ENGINE
@@ -1074,16 +1082,17 @@ function dmTogglePlay(btn){
       dm.outGain=actx.createGain();dm.outGain.gain.value=0.75;
       dm.outGain.connect(actx.destination);
     }
+    // Randomize on first play or re-randomize
     dmInitVoices();
     dmRandomizePatterns();
     dm.step=0;
     btn.textContent="■ STOP";btn.classList.add("dm-play-on");
-    syncGateClock(); // piggyback on same clock
+    syncGateClock();
   } else {
     dm.step=0;
     btn.textContent="▶ PLAY";btn.classList.remove("dm-play-on");
-    // Clear step highlights
     dm.stepEls.forEach(function(row){row.forEach(function(el){el.classList.remove("cur");});});
+    syncGateClock();
   }
 }
 
