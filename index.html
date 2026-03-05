@@ -273,7 +273,10 @@ var bpm=120, actx=null, tracks=[], NUM=5, REEL_SZ=80;
 })();
 
 /* ── SPLASH DISMISS ── */
+var splashDismissed=false;
 function dismissSplash(){
+  if(splashDismissed)return;
+  splashDismissed=true;
   actx=new(window.AudioContext||window.webkitAudioContext)();
   // Unlock iOS audio with silent buffer
   var buf=actx.createBuffer(1,1,22050);
@@ -285,15 +288,12 @@ function dismissSplash(){
   setTimeout(function(){sp.style.display="none";},500);
   document.getElementById("app").classList.add("ready");
 
-  // Only auto-load the first reel — user starts the rest manually
-  setTimeout(function(){onLoad(tracks[0]);},300);
   // Pre-init drum outGain while we have the user gesture
-  setTimeout(function(){
-    if(!dm.outGain&&actx){
-      dm.outGain=actx.createGain();dm.outGain.gain.value=0.75;
-      dm.outGain.connect(actx.destination);
-    }
-  },100);
+  dm.outGain=actx.createGain();dm.outGain.gain.value=0.75;
+  dm.outGain.connect(actx.destination);
+
+  // Only auto-load the first reel
+  setTimeout(function(){onLoad(tracks[0]);},300);
 }
 document.getElementById("splash-btn").addEventListener("click",dismissSplash);
 document.getElementById("splash").addEventListener("click",dismissSplash);
@@ -947,7 +947,10 @@ function dmTogglePlay(btn){
   if(dm.playing){
     if(!actx)return;
     if(!dm.outGain){dm.outGain=actx.createGain();dm.outGain.gain.value=0.75;dm.outGain.connect(actx.destination);}
-    dmInitVoices();dmRandomizePatterns();dm.step=0;
+    // Only randomize on first ever play; after that preserve current pattern
+    if(!dm.voices.length) dmInitVoices();
+    if(!dm.patterns[0].length) dmRandomizePatterns();
+    dm.step=0;
     btn.textContent="■ STOP";btn.classList.add("dm-play-on");
     syncGateClock();
   } else {
