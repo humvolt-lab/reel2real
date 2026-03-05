@@ -1178,7 +1178,21 @@ function dmLoadGenre(idx){
   var g = DM_GENRES[dm_genreIdx];
   dm.patterns = [g.k.slice(), g.s.slice(), g.h.slice(), g.p.slice()];
   dm_complexity = 2;
-  dmApplyComplexity();
+  dmUpdateDisplay();
+}
+
+function dmRandomizeBeat(){
+  // Keep current genre/style, just randomize the pattern within it
+  var g = DM_GENRES[dm_genreIdx];
+  dm.patterns = [g.k.slice(), g.s.slice(), g.h.slice(), g.p.slice()];
+  // Scramble by randomly flipping some steps
+  dm.patterns.forEach(function(pat){
+    for(var i=0;i<16;i++){
+      if(Math.random()<0.25) pat[i] = pat[i] ? 0 : 1;
+    }
+    // Always keep beat 1 on kick
+  });
+  dm.patterns[0][0] = 1;
   dmUpdateDisplay();
 }
 
@@ -1243,7 +1257,7 @@ function dmUpdateDisplay(){
 }
 
 function dmRandomizePatterns(){
-  dmLoadGenre(Math.floor(Math.random()*DM_GENRES.length));
+  dmRandomizeBeat();
 }
 
 function buildDrumCell(){
