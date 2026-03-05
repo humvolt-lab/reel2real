@@ -575,6 +575,7 @@ function updateGateStepUI(t,step){
   if(!t.gateStepEls||!t.gateStepEls.length)return;
   var cur=step%16;
   t.gateStepEls.forEach(function(el,i){
+    el.classList.toggle('active', !!t.gatePattern[i]);
     el.classList.toggle('playhead', t.gateOn && t.playing && i===cur);
   });
 }
@@ -1507,6 +1508,7 @@ function buildCell(idx){
       t.gateStepEls.push(dot);gs.appendChild(dot);
     })(s);
   }
+  renderGateSteps(t); // show initial pattern state
   grow.appendChild(gs);
   cell.appendChild(grow);
 
