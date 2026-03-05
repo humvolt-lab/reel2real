@@ -129,10 +129,11 @@ transition:all .1s;user-select:none;-webkit-user-select:none;
 .gs{
 border-radius:2px;cursor:pointer;
 background:#d8c898;border:1px solid #b09060;
-transition:background .08s,box-shadow .08s;
+transition:background .06s,box-shadow .06s;
 }
 .gs.active{background:var(–tc);border-color:var(–tc);box-shadow:0 0 4px var(–tc)}
-.gs.playing-step{box-shadow:0 0 7px #fff,0 0 4px var(–tc);filter:brightness(1.3)}
+.gs.playhead{outline:2px solid #fff;outline-offset:-2px;z-index:1;position:relative;}
+.gs.active.playhead{box-shadow:0 0 10px #fff,0 0 5px var(–tc);filter:brightness(1.35)}
 .gs:active{filter:brightness(1.2)}
 
 /* ── DRUM MACHINE CELL ── */
@@ -403,12 +404,22 @@ function drawReel(cv,ang,col,spinning){
 
 /* ── AUDIO HELPERS ── */
 function makeIR(ctx){var len=ctx.sampleRate*2,b=ctx.createBuffer(2,len,ctx.sampleRate);for(var ch=0;ch<2;ch++){var d=b.getChannelData(ch);for(var i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.2);}return b;}
-function dCurve(a){var k=a*380,n=256,c=new Float32Array(n);for(var i=0;i<n;i++){var x=(i*2)/n-1;c[i]=k?((Math.PI+k)*x)/(Math.PI+k*Math.abs(x)):x;}return c;}
+function dCurve(a){
+  var k=a*380,n=256,c=new Float32Array(n);
+  for(var i=0;i<n;i++){
+    var x=(i*2)/n-1;
+    c[i]=k?((Math.PI+k)*x)/(Math.PI+k*Math.abs(x)):x;
+  }
+  // Normalize: find peak output and scale back to 1.0 so drive doesn't boost volume
+  var peak=0;for(var i=0;i<n;i++)if(Math.abs(c[i])>peak)peak=Math.abs(c[i]);
+  if(peak>0.001)for(var i=0;i<n;i++)c[i]/=peak;
+  return c;
+}
 
 /* ── TRACK ── */
 function makeTrack(idx){
   return{idx:idx,col:COLORS[idx],buf:null,src:null,
-    gainNd:null,filtNd:null,distNd:null,revNd:null,dryNd:null,wetNd:null,
+    gainNd:null,filtNd:null,distNd:null,driveCompNd:null,revNd:null,dryNd:null,wetNd:null,
     gateNd:null,
     playing:false,loading:false,ang:0,raf:null,
     rev:false,vol:"med",fxIdx:10,
@@ -422,13 +433,14 @@ function makeTrack(idx){
 function buildChain(t){
   if(!actx||t.gainNd)return;
   t.gainNd=actx.createGain();t.gainNd.gain.value=volGain(t.vol);
-  t.gateNd=actx.createGain();t.gateNd.gain.value=1; // gate sits after gainNd
+  t.gateNd=actx.createGain();t.gateNd.gain.value=1;
   t.filtNd=actx.createBiquadFilter();t.filtNd.type="lowpass";t.filtNd.frequency.value=18000;
   t.distNd=actx.createWaveShaper();t.distNd.curve=dCurve(0);t.distNd.oversample="4x";
+  t.driveCompNd=actx.createGain();t.driveCompNd.gain.value=1; // makeup gain, reduced when drive is on
   t.revNd=actx.createConvolver();t.revNd.buffer=makeIR(actx);
   t.dryNd=actx.createGain();t.dryNd.gain.value=1;
   t.wetNd=actx.createGain();t.wetNd.gain.value=0;
-  t.gainNd.connect(t.gateNd);t.gateNd.connect(t.distNd);t.distNd.connect(t.filtNd);
+  t.gainNd.connect(t.gateNd);t.gateNd.connect(t.distNd);t.distNd.connect(t.driveCompNd);t.driveCompNd.connect(t.filtNd);
   t.filtNd.connect(t.dryNd);t.filtNd.connect(t.revNd);t.revNd.connect(t.wetNd);
   t.dryNd.connect(actx.destination);t.wetNd.connect(actx.destination);
 }
@@ -437,11 +449,12 @@ function applyFX(t){
   if(!t.filtNd)return;
   t.filtNd.type="lowpass";t.filtNd.frequency.value=18000;t.filtNd.Q.value=1;
   t.distNd.curve=dCurve(0);t.dryNd.gain.value=1;t.wetNd.gain.value=0;
+  if(t.driveCompNd)t.driveCompNd.gain.value=1;
   var f=t.fxIdx;
   if(f===0){t.dryNd.gain.value=.5;t.wetNd.gain.value=.9;}
   else if(f===1){t.filtNd.type="lowpass";t.filtNd.frequency.value=500;t.filtNd.Q.value=5;}
   else if(f===2){t.filtNd.type="highpass";t.filtNd.frequency.value=2400;t.filtNd.Q.value=4;}
-  else if(f===3){t.distNd.curve=dCurve(.75);}
+  else if(f===3){t.distNd.curve=dCurve(.75);if(t.driveCompNd)t.driveCompNd.gain.value=0.35;}
   else if(f===4){t.filtNd.type="bandpass";t.filtNd.frequency.value=900;t.filtNd.Q.value=10;}
   else if(f===7){t.dryNd.gain.value=.2;t.wetNd.gain.value=1.2;}
 }
@@ -552,37 +565,33 @@ function applyGateStep(t,step){
   }
 }
 
+function renderGateSteps(t){
+  t.gateStepEls.forEach(function(el,i){
+    el.classList.toggle('active',!!t.gatePattern[i]);
+  });
+}
+
 function updateGateStepUI(t,step){
   if(!t.gateStepEls||!t.gateStepEls.length)return;
   var cur=step%16;
   t.gateStepEls.forEach(function(el,i){
-    el.classList.toggle('active',!!t.gatePattern[i]);
-    el.classList.toggle('playing-step',t.gateOn&&i===cur&&t.playing);
+    el.classList.toggle('playhead', t.gateOn && t.playing && i===cur);
   });
 }
 
 function toggleGate(t){
   if(t.gateOn){
-    // Turn off — open gate fully
     t.gateOn=false;
     if(t.gateNd&&actx)t.gateNd.gain.setTargetAtTime(1,actx.currentTime,0.01);
     t.gateBtnEl.classList.remove('gate-on');
-    t.gateBtnEl.textContent='GATE';
+    // Clear playhead when gate turns off
+    t.gateStepEls.forEach(function(el){el.classList.remove('playhead');});
   } else {
-    // Turn on — randomize pattern first
     t.gatePattern=randomGatePattern();
     t.gateOn=true;
     t.gateBtnEl.classList.add('gate-on');
-    t.gateBtnEl.textContent='GATE';
     renderGateSteps(t);
   }
-  updateGateStepUI(t,t.gateStep);
-}
-
-function renderGateSteps(t){
-  t.gateStepEls.forEach(function(el,i){
-    el.classList.toggle('active',!!t.gatePattern[i]);
-  });
 }
 
 /* ── SHARED GATE CLOCK — AudioContext lookahead scheduler ── */
@@ -756,6 +765,10 @@ var dm = {
   complexEl: null,
   volBtn: null,
   vol: "med",
+  fxIdx: -1,      // -1 = no FX
+  fxEl: null,
+  fxNd: null,     // BiquadFilter or null
+  fxGain: null,   // wet gain for reverb
   outGain: null,
 };
 
@@ -1242,6 +1255,73 @@ function dmRandomizePatterns(){
   dmRandomizeBeat();
 }
 
+var DM_FX_NAMES=["REVERB","FILT LO","FILT HI","DRIVE","FLANGE","DEEP VRB","PITCH DN","PITCH UP","BIT CRSH","CLEAN"];
+
+function dmApplyFX(idx){
+  if(!actx||!dm.outGain) return;
+  dm.fxIdx=idx;
+  if(dm.fxEl) dm.fxEl.textContent=DM_FX_NAMES[idx]||"CLEAN";
+
+  // Tear down previous FX nodes
+  if(dm.fxNd){try{dm.fxNd.disconnect();}catch(e){}dm.fxNd=null;}
+  if(dm.fxRevNd){try{dm.fxRevNd.disconnect();}catch(e){}dm.fxRevNd=null;}
+  if(dm.fxWetNd){try{dm.fxWetNd.disconnect();}catch(e){}dm.fxWetNd=null;}
+  // Reconnect outGain straight to compressor (clean path)
+  try{dm.outGain.disconnect();}catch(e){}
+  dm.outGain.connect(dm._comp||actx.destination);
+
+  var dest=dm._comp||actx.destination;
+  var n=dm.fxNd=actx.createBiquadFilter();
+
+  if(idx===9){ // CLEAN — just pass through, no extra node needed
+    dm.fxNd=null; return;
+  }
+  if(idx===0||idx===5){ // REVERB / DEEP VRB
+    var rev=actx.createConvolver(); rev.buffer=makeIR(actx);
+    var wet=actx.createGain(); wet.gain.value=idx===5?1.4:0.85;
+    var dry=actx.createGain(); dry.gain.value=idx===5?0.2:0.5;
+    dm.outGain.disconnect();
+    dm.outGain.connect(dry); dry.connect(dest);
+    dm.outGain.connect(rev); rev.connect(wet); wet.connect(dest);
+    dm.fxRevNd=rev; dm.fxWetNd=wet; dm.fxNd=dry; return;
+  }
+  if(idx===1){n.type="lowpass";n.frequency.value=500;n.Q.value=4;}
+  else if(idx===2){n.type="highpass";n.frequency.value=3000;n.Q.value=3;}
+  else if(idx===3){ // DRIVE with compensation
+    n.type="lowpass";n.frequency.value=18000; // passthrough filter as placeholder
+    var ws=actx.createWaveShaper(); ws.curve=dCurve(0.8);ws.oversample="4x";
+    var comp=actx.createGain(); comp.gain.value=0.35; // makeup gain normalization
+    dm.outGain.disconnect();
+    dm.outGain.connect(ws); ws.connect(comp); comp.connect(dest);
+    dm.fxNd=ws; dm.fxWetNd=comp; return;
+  }
+  else if(idx===4){ // FLANGE
+    n.type="allpass";n.frequency.value=1200;n.Q.value=8;
+  }
+  else if(idx===6||idx===7){ return; } // pitch handled at playback time (not applicable to baked drums — skip)
+  else if(idx===8){ // BIT CRUSH — lowpass to fake it
+    n.type="lowpass";n.frequency.value=2000;n.Q.value=1;
+  }
+  dm.outGain.disconnect();
+  dm.outGain.connect(n); n.connect(dest);
+}
+
+function dmRandomFX(){
+  var choices=[0,1,2,3,4,5,8,9];
+  // weight toward CLEAN so it doesn't always sound mangled
+  var weighted=[9,9,0,1,2,3,4,5,8];
+  var pick=weighted[Math.floor(Math.random()*weighted.length)];
+  dmApplyFX(pick);
+}
+
+function dmOnFX(){
+  // Cycle through a curated subset
+  var cycle=[9,0,1,2,3,4,5,8];
+  var cur=cycle.indexOf(dm.fxIdx);
+  var next=cycle[(cur+1)%cycle.length];
+  dmApplyFX(next);
+}
+
 function dmOnVol(){
   dm.vol=VOL_CYCLE[dm.vol]||"med";
   if(dm.volBtn){
@@ -1320,14 +1400,24 @@ function buildDrumCell(){
     mb.classList.add("flash");setTimeout(function(){mb.classList.remove("flash");},200);
   });row2.appendChild(mb);
 
-  // Row 3: SOUND
+  // Row 3: FX | SOUND
   var row3=document.createElement("div");row3.className="dm-row2";row3.style.marginBottom="0";
+
+  var fxb=document.createElement("button");fxb.className="dm-btn dm-genre";
+  fxb.textContent="CLEAN";fxb.style.flex="2";
+  fxb.addEventListener("click",function(){
+    dmOnFX();
+    fxb.classList.add("flash");setTimeout(function(){fxb.classList.remove("flash");},250);
+  });
+  dm.fxEl=fxb;row3.appendChild(fxb);
+
   var sb=document.createElement("button");sb.className="dm-btn dm-sound";sb.textContent="SOUND";
   sb.style.flex="1";
   sb.addEventListener("click",function(){
-    dmInitVoices();
+    dmInitVoices();dmRandomFX();
     sb.classList.add("flash");setTimeout(function(){sb.classList.remove("flash");},250);
   });row3.appendChild(sb);
+
   cell.appendChild(row3);
 
   cell.appendChild(row2);
@@ -1349,6 +1439,7 @@ function dmTogglePlay(btn){
       limiter.ratio.value=20; limiter.attack.value=0.001; limiter.release.value=0.05;
       dm.outGain=actx.createGain(); dm.outGain.gain.value=volGain(dm.vol);
       dm.outGain.connect(comp); comp.connect(limiter); limiter.connect(actx.destination);
+      dm._comp=comp;
     }
     if(!dm.voices.length) dmInitVoices();
     if(!dm.patterns[0].length) dmLoadGenre(0);
@@ -1411,7 +1502,7 @@ function buildCell(idx){
       // tap individual step to toggle it
       dot.addEventListener("click",function(){
         t.gatePattern[si]=t.gatePattern[si]?0:1;
-        dot.classList.toggle('active',!!t.gatePattern[si]);
+        renderGateSteps(t);
       });
       t.gateStepEls.push(dot);gs.appendChild(dot);
     })(s);
