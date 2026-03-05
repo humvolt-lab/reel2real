@@ -134,31 +134,81 @@ html,body{width:100%;height:100%;overflow:hidden;background:#1a1208;position:fix
 .gs:active{filter:brightness(1.2)}
 
 /* ── DRUM MACHINE CELL ── */
-.cell-drum{background:linear-gradient(155deg,#1a1c2a,#12141e,#0e101a)!important;border-color:#2a2d42!important;}
-.cell-drum::before,.cell-drum::after{background:radial-gradient(circle at 35% 35%,#3a3d5a,#1a1d2e)!important;border-color:#2a2d42!important;}
-.cell-drum .cell-name{color:#8890b8!important;}
-.cell-drum .cell-name.lit{color:#c0c8f0!important;}
-.dm-label{font-size:9px;letter-spacing:2px;color:#5058a0;text-align:center;line-height:1;min-height:11px;width:100%}
-.dm-grid{width:100%;display:grid;grid-template-rows:repeat(4,1fr);gap:2px;flex:1;min-height:0}
-.dm-row{display:grid;grid-template-columns:26px 1fr;gap:2px;align-items:center;min-height:0}
-.dm-name{font-size:8px;letter-spacing:0;color:#6068a8;text-align:right;padding-right:2px;white-space:nowrap;overflow:hidden}
-.dm-steps{display:grid;grid-template-columns:repeat(16,1fr);gap:1px;height:100%}
-.ds{border-radius:2px;cursor:pointer;background:#1e2038;border:1px solid #2a2e4a;transition:background .06s,box-shadow .06s;}
-.ds.on{background:var(--dc);border-color:var(--dc);box-shadow:0 0 5px var(--dc)}
-.ds.cur{box-shadow:0 0 8px #fff,0 0 4px var(--dc);filter:brightness(1.4)}
-.dm-ctrl{display:flex;gap:3px;width:100%}
+.cell-drum{
+  background:linear-gradient(160deg,#2a2318,#1e1a10,#161208)!important;
+  border-color:#5a4a28!important;
+}
+.cell-drum::before,.cell-drum::after{
+  background:radial-gradient(circle at 35% 35%,#6a5a38,#3a2e18)!important;
+  border-color:#5a4a28!important;
+}
+.dm-title{
+  font-size:8px;letter-spacing:3px;color:#6a5828;text-align:center;
+  width:100%;margin-bottom:2px;
+}
+.dm-playing-led{
+  display:inline-block;width:7px;height:7px;border-radius:50%;
+  background:#2a1a08;border:1px solid #4a3818;
+  box-shadow:none;transition:all .15s;vertical-align:middle;margin-right:4px;
+}
+.dm-playing-led.on{
+  background:#ff4400;border-color:#ff6620;
+  box-shadow:0 0 8px rgba(255,80,0,.9),0 0 3px rgba(255,80,0,1);
+}
+.dm-genre-display{
+  font-size:9px;letter-spacing:1px;color:#c8a050;text-align:center;
+  width:100%;min-height:12px;margin-bottom:3px;
+  text-shadow:0 0 6px rgba(200,160,80,.4);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* Button rows — cassette deck style */
+.dm-row1,.dm-row2{display:flex;gap:4px;width:100%;margin-bottom:4px;}
 .dm-btn{
   flex:1;display:flex;align-items:center;justify-content:center;
-  background:linear-gradient(180deg,#2a2e48,#1e2038);color:#8890c8;
-  border:1.5px solid #3a3e60;border-radius:3px;
-  font-family:'VT323',monospace;font-size:11px;
-  cursor:pointer;outline:none;-webkit-appearance:none;height:22px;
-  transition:all .1s;user-select:none;-webkit-user-select:none;padding:0 3px;
-  box-shadow:0 1px 3px rgba(0,0,0,.5);
+  font-family:'VT323',monospace;font-size:11px;letter-spacing:1px;
+  cursor:pointer;outline:none;-webkit-appearance:none;
+  height:26px;border-radius:3px;padding:0 2px;
+  transition:all .08s;user-select:none;-webkit-user-select:none;
+  /* Default: cream/ivory cassette button */
+  background:linear-gradient(180deg,#f0e8d0,#d8cc9a);
+  color:#2a1e08;border:2px solid #9a7830;
+  box-shadow:0 3px 0 #6a4e18, 0 3px 6px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.6);
 }
-.dm-btn:active{background:linear-gradient(180deg,#3a3e60,#2a2e48);transform:translateY(1px)}
-.dm-btn.dm-play-on{background:linear-gradient(180deg,#4050d8,#2838c0);color:#fff;border-color:#6878f0;box-shadow:0 0 10px rgba(80,100,220,.6)}
-.dm-btn.flash{background:linear-gradient(180deg,#5060e8,#3848d0);color:#fff;border-color:#8090ff}
+.dm-btn:active{
+  transform:translateY(2px);
+  box-shadow:0 1px 0 #6a4e18, 0 1px 3px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.3);
+}
+/* Play button — larger, red-tipped like a cassette play key */
+.dm-btn.dm-play{
+  background:linear-gradient(180deg,#f0e8d0,#d8cc9a);
+  color:#2a1e08;border-color:#9a7830;
+}
+.dm-btn.dm-play.dm-play-on{
+  background:linear-gradient(180deg,#d83010,#a82000);
+  color:#fff;border-color:#f05030;
+  box-shadow:0 3px 0 #701000,0 0 12px rgba(220,60,20,.5),inset 0 1px 0 rgba(255,150,100,.3);
+}
+/* Sound button — dark */
+.dm-btn.dm-sound{
+  background:linear-gradient(180deg,#3a3020,#28200e);
+  color:#c8a050;border-color:#6a5020;
+  box-shadow:0 3px 0 #181008,0 3px 6px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,200,80,.1);
+}
+/* Genre/preset button — wider */
+.dm-btn.dm-genre{
+  background:linear-gradient(180deg,#e8e0c8,#c8b878);
+  color:#1a1000;border-color:#8a6820;
+  font-size:10px;letter-spacing:2px;
+}
+/* Complexity buttons — + and - */
+.dm-btn.dm-complex{
+  background:linear-gradient(180deg,#e0d8c0,#c0b068);
+  color:#1a1000;border-color:#807038;font-size:14px;
+}
+.dm-btn.flash{
+  background:linear-gradient(180deg,#f8d060,#d8a020)!important;
+  color:#1a0800!important;border-color:#e89020!important;
+}
 </style>
 </head>
 <body>
@@ -685,6 +735,9 @@ var dm = {
   stepEls: [[],[],[],[]],
   nameEls: [],
   playBtn: null,
+  ledEl: null,
+  genreEl: null,
+  complexEl: null,
   outGain: null,
 };
 
@@ -867,95 +920,258 @@ function dmPerc(p,t,dest){
   }
 }
 
-function dmRandomPattern(row){
-  var r=Math.random;
-  if(row===0){
-    var p=[[1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],[1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0],
-            [1,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0],[1,0,0,0,1,0,0,0,1,0,0,0,0,1,0,0],
-            [1,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0],[1,0,1,0,0,0,0,0,1,0,0,0,1,0,0,0]];
-    return p[Math.floor(r()*p.length)].slice();
+/* ── GENRE PRESETS ──
+   Each preset: [name, kick[], snare[], hat[], perc[]]
+   All 16-step patterns. Rows: 0=kick 1=snare 2=hat 3=perc
+*/
+var DM_GENRES = [
+  {name:"FOUR-ON-FLOOR",
+   k:[1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],
+   s:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
+   h:[1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],
+   p:[0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0]},
+  {name:"HIP-HOP",
+   k:[1,0,0,1,0,0,1,0,0,0,1,0,0,0,0,0],
+   s:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,1],
+   h:[1,1,0,1,1,0,1,1,0,1,1,0,1,1,0,1],
+   p:[0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0]},
+  {name:"TRAP",
+   k:[1,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0],
+   s:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
+   h:[1,1,1,1,0,1,1,1,1,1,1,1,0,1,1,1],
+   p:[0,0,0,1,0,0,0,0,0,1,0,0,0,0,1,0]},
+  {name:"JUNGLE",
+   k:[1,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0],
+   s:[0,0,1,0,1,0,0,1,0,0,1,0,1,0,0,1],
+   h:[1,0,1,1,0,1,1,0,1,0,1,1,0,1,0,1],
+   p:[0,1,0,0,0,0,1,0,0,0,0,1,0,0,1,0]},
+  {name:"BOSSA NOVA",
+   k:[1,0,0,1,0,0,1,0,0,0,1,0,0,1,0,0],
+   s:[0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0],
+   h:[1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],
+   p:[0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0]},
+  {name:"SAMBA",
+   k:[1,0,0,0,1,0,0,1,0,0,1,0,0,0,1,0],
+   s:[0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0],
+   h:[1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1],
+   p:[1,0,1,0,0,1,0,0,1,0,1,0,0,1,0,0]},
+  {name:"REGGAETON",
+   k:[1,0,0,1,1,0,0,0,1,0,0,1,1,0,0,0],
+   s:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
+   h:[1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],
+   p:[0,0,1,0,0,1,0,0,0,0,1,0,0,1,0,0]},
+  {name:"AFROBEAT",
+   k:[1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0],
+   s:[0,0,1,0,0,1,0,0,0,0,1,0,0,1,0,0],
+   h:[1,0,1,1,0,1,0,1,1,0,1,1,0,1,0,1],
+   p:[0,1,0,0,1,0,0,1,0,1,0,0,1,0,1,0]},
+  {name:"CUMBIA",
+   k:[1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],
+   s:[0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0],
+   h:[1,0,0,1,0,1,0,0,1,0,0,1,0,1,0,0],
+   p:[0,1,0,0,0,0,1,1,0,1,0,0,0,0,1,0]},
+  {name:"BAILE FUNK",
+   k:[1,0,1,0,0,0,1,0,1,0,0,0,1,0,1,0],
+   s:[0,0,0,0,1,0,0,1,0,0,0,0,1,0,0,1],
+   h:[1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1],
+   p:[0,0,1,1,0,0,0,0,1,0,1,0,0,0,0,1]},
+  {name:"TECHNO",
+   k:[1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],
+   s:[0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0],
+   h:[1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],
+   p:[0,0,1,0,0,1,0,0,0,0,1,1,0,0,0,1]},
+  {name:"DRUM & BASS",
+   k:[1,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0],
+   s:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,1,0],
+   h:[1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],
+   p:[0,1,0,0,0,0,1,0,0,1,0,0,0,0,0,1]},
+  {name:"DANCEHALL",
+   k:[1,0,0,1,0,0,0,0,1,0,0,0,0,0,1,0],
+   s:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
+   h:[1,0,1,1,0,1,0,1,1,0,1,0,1,1,0,1],
+   p:[0,0,1,0,0,0,0,1,0,0,0,1,0,0,0,0]},
+  {name:"FUNK",
+   k:[1,0,0,1,0,0,1,0,0,0,0,0,1,0,0,0],
+   s:[0,0,0,0,1,0,0,0,0,0,0,1,1,0,0,0],
+   h:[1,1,0,1,1,0,1,1,0,1,1,0,1,0,1,1],
+   p:[0,0,1,0,0,1,0,0,1,0,0,0,0,1,0,0]},
+  {name:"JAZZ BRUSH",
+   k:[1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],
+   s:[0,0,1,0,0,0,1,0,0,0,1,0,0,1,0,0],
+   h:[1,0,0,1,0,1,0,0,1,0,0,1,0,1,0,0],
+   p:[0,1,0,0,1,0,0,1,0,0,1,0,0,0,1,0]},
+  {name:"WALTZ",
+   k:[1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0],
+   s:[0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0],
+   h:[1,0,1,0,1,0,1,0,1,0,1,0,0,0,0,0],
+   p:[0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0]},
+  {name:"BREAKS",
+   k:[1,0,0,0,0,0,1,0,1,0,0,1,0,0,0,0],
+   s:[0,0,0,0,1,0,0,1,0,0,0,0,1,0,1,0],
+   h:[1,0,1,0,0,1,0,1,0,1,0,0,1,0,1,0],
+   p:[0,1,0,0,1,0,0,0,0,0,1,0,0,1,0,0]},
+];
+
+var dm_genreIdx = 0;
+var dm_complexity = 2; // 0=sparse 1=simple 2=medium 3=full 4=dense
+
+function dmLoadGenre(idx){
+  dm_genreIdx = ((idx % DM_GENRES.length) + DM_GENRES.length) % DM_GENRES.length;
+  var g = DM_GENRES[dm_genreIdx];
+  dm.patterns = [g.k.slice(), g.s.slice(), g.h.slice(), g.p.slice()];
+  dm_complexity = 2;
+  dmApplyComplexity();
+  dmUpdateDisplay();
+}
+
+function dmApplyComplexity(){
+  // Complexity 0=sparse: only beats 1+9 on kick, beats 5+13 on snare, rest off
+  // Complexity 4=dense: add extra fills and ghost notes
+  var g = DM_GENRES[dm_genreIdx];
+  var base = [g.k.slice(), g.s.slice(), g.h.slice(), g.p.slice()];
+
+  if(dm_complexity === 0){
+    // Bare skeleton
+    dm.patterns[0] = base[0].map(function(v,i){return (i===0||i===8)?1:0;});
+    dm.patterns[1] = base[1].map(function(v,i){return (i===4||i===12)?1:0;});
+    dm.patterns[2] = base[2].map(function(v,i){return (i%4===0)?1:0;});
+    dm.patterns[3] = new Array(16).fill(0);
+  } else if(dm_complexity === 1){
+    // Simple — base kick/snare, quarter note hat, no perc
+    dm.patterns[0] = base[0].slice();
+    dm.patterns[1] = base[1].slice();
+    dm.patterns[2] = base[2].map(function(v,i){return (i%4===0)?1:(v&&i%2===0?1:0);});
+    dm.patterns[3] = new Array(16).fill(0);
+  } else if(dm_complexity === 2){
+    // Medium — full base pattern
+    dm.patterns = [base[0].slice(), base[1].slice(), base[2].slice(), base[3].slice()];
+  } else if(dm_complexity === 3){
+    // Full — add ghost snares and extra hat hits
+    dm.patterns[0] = base[0].slice();
+    dm.patterns[1] = base[1].map(function(v,i){
+      if(v) return 1;
+      // ghost hit 2 steps before each main snare
+      var prev = base[1][(i+2)%16];
+      return (prev && Math.random()<0.5) ? 1 : 0;
+    });
+    dm.patterns[2] = base[2].map(function(v){return v||Math.random()<0.25?1:0;});
+    dm.patterns[3] = base[3].slice();
+  } else {
+    // Dense — kick fills, double-time hat, everything fires
+    dm.patterns[0] = base[0].map(function(v,i){return v||(i%2===0&&Math.random()<0.2)?1:0;});
+    dm.patterns[1] = base[1].map(function(v,i){return v||(Math.random()<0.15)?1:0;});
+    dm.patterns[2] = new Array(16).fill(1);
+    dm.patterns[3] = base[3].map(function(v){return v||Math.random()<0.4?1:0;});
   }
-  if(row===1){
-    var b=[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0];
-    if(r()<0.4)b[Math.floor(r()*16)]=r()<0.5?1:0;
-    if(r()<0.3)b[Math.floor(r()*16)]=1;
-    return b;
-  }
-  if(row===2){
-    var p=[[1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],[1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1],
-            [1,0,0,1,0,0,1,0,1,0,0,1,0,0,1,0],[0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1],
-            [1,0,1,1,0,1,0,1,1,0,1,1,0,1,0,1],[1,1,1,0,1,0,1,1,1,0,1,0,1,1,0,1]];
-    return p[Math.floor(r()*p.length)].slice();
-  }
-  var p=[[0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0],[0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0],
-          [0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0],[1,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0],
-          [0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,1]];
-  return p[Math.floor(r()*p.length)].slice();
+}
+
+function dmSimplify(){
+  dm_complexity = Math.max(0, dm_complexity - 1);
+  dmApplyComplexity();
+  dmUpdateDisplay();
+}
+
+function dmComplicate(){
+  dm_complexity = Math.min(4, dm_complexity + 1);
+  dmApplyComplexity();
+  dmUpdateDisplay();
+}
+
+var DM_COMPLEXITY_LABELS = ["BARE","SIMPLE","MEDIUM","FULL","DENSE"];
+
+function dmUpdateDisplay(){
+  if(dm.genreEl) dm.genreEl.textContent = DM_GENRES[dm_genreIdx].name;
+  if(dm.complexEl) dm.complexEl.textContent = DM_COMPLEXITY_LABELS[dm_complexity];
 }
 
 function dmRandomizePatterns(){
-  dm.patterns=dm.patterns.map(function(_,row){return dmRandomPattern(row);});
-  dmRenderSteps();
-}
-
-function dmRenderSteps(){
-  dm.patterns.forEach(function(pat,row){
-    pat.forEach(function(on,si){var el=dm.stepEls[row][si];if(el)el.classList.toggle("on",!!on);});
-  });
+  dmLoadGenre(Math.floor(Math.random()*DM_GENRES.length));
 }
 
 function buildDrumCell(){
   var cell=document.createElement("div");
   cell.className="cell c5 cell-drum";cell.id="cell5";
-  cell.style.setProperty("--tc","#6878f0");
-  var lbl=document.createElement("div");lbl.className="dm-label";lbl.textContent="— DRUM MACHINE —";cell.appendChild(lbl);
-  var dgrid=document.createElement("div");dgrid.className="dm-grid";
-  DM_NAMES.forEach(function(names,row){
-    var drow=document.createElement("div");drow.className="dm-row";
-    drow.style.setProperty("--dc",DM_COLORS[row]);
-    var dnm=document.createElement("div");dnm.className="dm-name";dnm.textContent=names[1];
-    dm.nameEls[row]=dnm;drow.appendChild(dnm);
-    var dsteps=document.createElement("div");dsteps.className="dm-steps";
-    dsteps.style.setProperty("--dc",DM_COLORS[row]);
-    dm.stepEls[row]=[];
-    for(var s=0;s<16;s++){
-      (function(si,r){
-        var ds=document.createElement("div");ds.className="ds";
-        ds.addEventListener("click",function(){
-          dm.patterns[r][si]=dm.patterns[r][si]?0:1;
-          ds.classList.toggle("on",!!dm.patterns[r][si]);
-        });
-        dm.stepEls[r][si]=ds;dsteps.appendChild(ds);
-      })(s,row);
-    }
-    drow.appendChild(dsteps);dgrid.appendChild(drow);
-  });
-  cell.appendChild(dgrid);
-  var ctrl=document.createElement("div");ctrl.className="dm-ctrl";
-  var pb=document.createElement("button");pb.className="dm-btn";pb.textContent="▶ PLAY";
-  pb.addEventListener("click",function(){dmTogglePlay(pb);});dm.playBtn=pb;ctrl.appendChild(pb);
-  var rb=document.createElement("button");rb.className="dm-btn";rb.textContent="⟳ BEAT";
-  rb.addEventListener("click",function(){dmRandomizePatterns();rb.classList.add("flash");setTimeout(function(){rb.classList.remove("flash");},300);});ctrl.appendChild(rb);
-  var sb=document.createElement("button");sb.className="dm-btn";sb.textContent="◈ SOUND";
-  sb.addEventListener("click",function(){dmInitVoices();sb.classList.add("flash");setTimeout(function(){sb.classList.remove("flash");},300);});ctrl.appendChild(sb);
-  cell.appendChild(ctrl);
+  cell.style.setProperty("--tc","#c8a050");
+
+  // Title row
+  var title=document.createElement("div");title.className="dm-title";
+  var led=document.createElement("span");led.className="dm-playing-led";dm.ledEl=led;
+  title.appendChild(led);
+  title.appendChild(document.createTextNode("DRUM MACHINE"));
+  cell.appendChild(title);
+
+  // Genre name display
+  var gdisp=document.createElement("div");gdisp.className="dm-genre-display";
+  gdisp.textContent=DM_GENRES[dm_genreIdx].name;
+  dm.genreEl=gdisp;cell.appendChild(gdisp);
+
+  // Complexity display
+  var cdisp=document.createElement("div");
+  cdisp.style.cssText="font-size:8px;letter-spacing:2px;color:#6a5020;text-align:center;width:100%;margin-bottom:4px;";
+  cdisp.textContent=DM_COMPLEXITY_LABELS[dm_complexity];
+  dm.complexEl=cdisp;cell.appendChild(cdisp);
+
+  // Row 1: PLAY | STYLE | SOUND
+  var row1=document.createElement("div");row1.className="dm-row1";
+
+  var pb=document.createElement("button");pb.className="dm-btn dm-play";pb.textContent="▶ PLAY";
+  pb.addEventListener("click",function(){dmTogglePlay(pb);});dm.playBtn=pb;row1.appendChild(pb);
+
+  var gb=document.createElement("button");gb.className="dm-btn dm-genre";gb.textContent="STYLE";
+  gb.addEventListener("click",function(){
+    dmLoadGenre(dm_genreIdx+1);
+    gb.classList.add("flash");setTimeout(function(){gb.classList.remove("flash");},250);
+  });row1.appendChild(gb);
+
+  var sb=document.createElement("button");sb.className="dm-btn dm-sound";sb.textContent="SOUND";
+  sb.addEventListener("click",function(){
+    dmInitVoices();
+    sb.classList.add("flash");setTimeout(function(){sb.classList.remove("flash");},250);
+  });row1.appendChild(sb);
+
+  cell.appendChild(row1);
+
+  // Row 2: – LESS | BEAT | MORE +
+  var row2=document.createElement("div");row2.className="dm-row2";
+
+  var lb=document.createElement("button");lb.className="dm-btn dm-complex";lb.textContent="–";
+  lb.addEventListener("click",function(){
+    dmSimplify();
+    lb.classList.add("flash");setTimeout(function(){lb.classList.remove("flash");},200);
+  });row2.appendChild(lb);
+
+  var bb=document.createElement("button");bb.className="dm-btn dm-genre";bb.textContent="BEAT";
+  bb.style.flex="2";
+  bb.addEventListener("click",function(){
+    dmRandomizePatterns();
+    bb.classList.add("flash");setTimeout(function(){bb.classList.remove("flash");},250);
+  });row2.appendChild(bb);
+
+  var mb=document.createElement("button");mb.className="dm-btn dm-complex";mb.textContent="+";
+  mb.addEventListener("click",function(){
+    dmComplicate();
+    mb.classList.add("flash");setTimeout(function(){mb.classList.remove("flash");},200);
+  });row2.appendChild(mb);
+
+  cell.appendChild(row2);
   return cell;
 }
+
 
 function dmTogglePlay(btn){
   dm.playing=!dm.playing;
   if(dm.playing){
     if(!actx)return;
     if(!dm.outGain){dm.outGain=actx.createGain();dm.outGain.gain.value=0.75;dm.outGain.connect(actx.destination);}
-    // Only randomize on first ever play; after that preserve current pattern
     if(!dm.voices.length) dmInitVoices();
-    if(!dm.patterns[0].length) dmRandomizePatterns();
+    if(!dm.patterns[0].length) dmLoadGenre(0);
     dm.step=0;
     btn.textContent="■ STOP";btn.classList.add("dm-play-on");
+    if(dm.ledEl) dm.ledEl.classList.add("on");
     syncGateClock();
   } else {
     dm.step=0;btn.textContent="▶ PLAY";btn.classList.remove("dm-play-on");
-    dm.stepEls.forEach(function(row){row.forEach(function(el){el.classList.remove("cur");});});
+    if(dm.ledEl) dm.ledEl.classList.remove("on");
     syncGateClock();
   }
 }
@@ -964,13 +1180,6 @@ function dmTick(step, schedTime){
   if(!dm.playing||!actx)return;
   var s=step%16;
   var t=schedTime||actx.currentTime;
-  // Visual update on next animation frame to avoid layout thrash in scheduler
-  var snapStep=s;
-  requestAnimationFrame(function(){
-    dm.stepEls.forEach(function(row,ri){
-      row.forEach(function(el,si){el.classList.toggle("cur",si===snapStep&&!!dm.patterns[ri][si]);});
-    });
-  });
   dm.patterns.forEach(function(pat,row){if(pat[s])dmFireStep(row,t);});
 }
 
